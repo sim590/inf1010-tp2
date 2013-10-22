@@ -25,10 +25,10 @@ Serveur
 
     type: liste (structures) chaînée (ordonnancer les noeuds par id-channel)
     
-    Nom client | adresse ip    | id channel |
-    ------------------------------------------
-    simon      | 192.168.1.103 | 2          |
-    fred       | 192.168.1.104 | 2          |
+    Nom client | adresse ip    | port client | id channel |
+    --------------------------------------------------------
+    simon      | 192.168.1.103 | 8760        | 2          |
+    fred       | 192.168.1.104 | 12367       | 2          |
 
 - tient une table de channels::
 
