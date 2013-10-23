@@ -7,7 +7,7 @@
 #--------------------------------------------------------
 BINDIR=../bin
 PROGRAM=inf1010-tp2
-CLIENT_HEADERS=
+CLIENT_HEADERS=-lncurses
 SERVER_HEADERS=
 
 all: client server
