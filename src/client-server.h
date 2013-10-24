@@ -6,6 +6,7 @@
 //-------------------------------------------------------
 #ifndef CLIENT-SERVER_NN925AM4
 #define CLIENT-SERVER_NN925AM4
+#define SERVER_PORT 1346;
 
 #include <sys/socket.h>
 #include <netinet/in.h>
