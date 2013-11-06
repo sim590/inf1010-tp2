@@ -46,6 +46,9 @@ quoi celui-ci fera le traitement et renvera le résultat.
     description: Ferme le programme.
     synopsis: /quit
 
+**Lorsqu'il y a un retour du serveur, cela consiste toujours en une liste de
+caractères à afficher à l'écran du client.**
+
 
 Serveur
 -------
@@ -57,45 +60,92 @@ Serveur
 
     type: liste doublement chaînée (ordonnancé selon le id channel)
 
-    id utilisateur | id channel | Nom utilisateur | adresse ip    | port client
-    -----------------------------------------------------------------------------
-    0              | 1          | simon           | 192.168.1.103 | 8760
-    1              | 1          | fred            | 192.168.1.104 | 12367
-    2              | 0          | mathieu         | 24.122.22.105 | 4329
-    3              | 1          | yannick         | 192.168.1.101 | 5239
+    id utilisateur | id channel      | adresse ip    | port client
+    ----------------------------------------------------------------
+    simon          | leshippiesLinux | 192.168.1.103 | 8760
+    fred           | leshippiesLinux | 192.168.1.104 | 12367
+    mathieu        | lesbonsbons     | 24.122.22.105 | 4329
+    yannick        | leshippiesLinux | 192.168.1.101 | 5239
 
 - tient une table de channels::
 
-    id channel | nom channel     | topic              
-    --------------------------------------------------
-    0          | lesbonbons      | miam               
-    1          | leshippiesLinux | Gloire à GNU/Linux 
+    id channel      | topic
+    --------------------------------------
+    lesbonbons      | miam
+    leshippiesLinux | Gloire à GNU/Linux
 
-    Mise en situation: Un client 3 envoie un message dans son channel.
+Mises en situation
+==================
 
-        - Le serveur identifie le client et le channel dans lequel il se trouve
-          (à l'aide de la table de connexions).
-        - Le serveur envoie le message à tous ceux qui se trouvent autour du
-          client dans la liste chaînée jusqu'à ce que le id channel ne soit plus
-          le même:
+- Le client 3 envoie un message dans son channel::
+  
+    input: texte
 
-    Mise en situation: Un client 0 demande la liste des utilisateurs dans son channel.
+    - Le serveur identifie le client et le channel dans lequel il se trouve
+      (à l'aide de la table de connexions).
+    - Le serveur envoie le message à tous ceux qui se trouvent autour du
+      client dans la liste chaînée jusqu'à ce que le id channel ne soit plus
+      le même:
 
-        - Le serveur identifie le client et le channel dans lequel il se trouve
-          (à l'aide de la table de connexions).
-        - Le serveur boucle à gauche et à droite pour amasser la liste des
-          clients dans le channel du demandeur et la lui envoie.
+- Le client 0 demande la liste des utilisateurs dans son channel::
 
-         ___________________         __________________         __________________         __________________         __________________      
-        |                    |     |                    |     |                    |     |                    |     |                    |
-        | id utilisateur: 1  |     | id utilisateur: 0  |     | id utilisateur: 3  |     | id utilisateur: 2  |     | id utilisateur: 4  |
-        | id channel: 0      |     | id channel: 1      |     | id channel: 1      |     | id channel: 1      |     | id channel: 4      |
-    ... | noeud* suivant     | --> | noeud* suivant     | --> | noeud* suivant     | --> | noeud* suivant     | --> | noeud* suivant     | ...
-        | noeud* precedent   | <-- | noeud* precedent   | <-- | noeud* precedent   | <-- | noeud* precedent   | <-- | noeud* precedent   |
-        | __________________ |     | __________________ |     | __________________ |     | __________________ |     | __________________ |
+    input: /names
+
+    - Le serveur identifie le client et le channel dans lequel il se trouve
+      (à l'aide de la table de connexions).
+    - Le serveur boucle à gauche et à droite pour amasser la liste des
+      clients dans le channel du demandeur et la lui envoie.
+
+Schéma représentant les deux situations ci-haut::
+    ____________________         __________________         __________________         __________________         __________________      
+    |                    |     |                    |     |                    |     |                    |     |                    |
+    | id utilisateur: 1  |     | id utilisateur: 0  |     | id utilisateur: 3  |     | id utilisateur: 2  |     | id utilisateur: 4  |
+    | id channel: 0      |     | id channel: 1      |     | id channel: 1      |     | id channel: 1      |     | id channel: 4      |
+    | noeud* suivant     | --> | noeud* suivant     | --> | noeud* suivant     | --> | noeud* suivant     | --> | noeud* suivant     | ...
+    | noeud* precedent   | <-- | noeud* precedent   | <-- | noeud* precedent   | <-- | noeud* precedent   | <-- | noeud* precedent   |
+    | __________________ |     | __________________ |     | __________________ |     | __________________ |     | __________________ |
                                                                                                                                               
-                                    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CLIENT-3 ^ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                                    Recherche par la gauche et par la droite jusqu'à ce que le id channel ne 
-                                    soit plus ``1`` puisqu'on sait que la liste de clients dans un même 
-                                    channel sont adjacents.
+                                <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CLIENT-3 ^ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                Recherche par la gauche et par la droite jusqu'à ce que le id channel ne 
+                                soit plus ``1`` puisqu'on sait que la liste de clients dans un même 
+                                channel sont adjacents.
 
+- Le client 1 demande la liste des cannaux ouverts sur le serveur::
+
+    input: /list
+
+    - Le serveur parcours la liste de cannaux en entier, il accumule la liste
+      et l'envoie au client.
+
+- Un client se connecte au serveur::
+
+  informations préalables
+  -------------------------
+    - hostname: 192.168.1.2
+
+  input: /connect 192.168.1.2
+
+  - Le serveur reçoit la demande et lance l'ajout des informations du client
+    dans la table de connexions;
+  - Place le client dans le canal par défaut (id: 0) et lui envoie la liste de
+    gens connectés sur ce canal.
+
+- Un client joint un autre canal::
+
+  informations préalables
+  -------------------------
+    - nom_channel: toto
+
+  input: /join toto
+
+  - Le serveur cherche le client dans la table de connexion et change son
+    identifiant "id channel" pour le nouveau.
+
+- Un client se déconnecte::
+
+  input: /disconnect
+
+  - Le serveur retire le noeud de connexion de l'utilisateur se déconnectant en
+    le recherchant par user_id.
+  - Envoie un message dans le canal dans lequel l'utilisateur était afin
+    d'informer les autres que l'utilisateur est parti.
