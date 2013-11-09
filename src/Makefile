@@ -7,11 +7,15 @@
 #--------------------------------------------------------
 BINDIR=../bin
 PROGRAM=inf1010-tp2
-CLISERV_HEADERS=client-server.h
 CLISERV_LINK=
+DEBUG=-g
 
 all: client server
-client:
-	gcc -o $(BINDIR)/$(PROGRAM)-client $(CLISERV_HEADERS) $(CLISERV_LINK) -lncurses client.c
-server:                                                                                     
-	gcc -o $(BINDIR)/$(PROGRAM)-server $(CLISERV_HEADERS) $(CLISERV_LINK) server.c
+client: client.o
+	gcc -I. -o $(BINDIR)/$(PROGRAM)-client $(CLISERV_LINK) -lncurses client.o 
+client.o: client.c client.h
+	gcc -I. -c $(DEBUG) client.c
+server: server.o
+	gcc -I. -o $(BINDIR)/$(PROGRAM)-server $(CLISERV_LINK) -lpthread server.o 
+server.o: server.c server.h
+	gcc -I. -c $(DEBUG) server.c
