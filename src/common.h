@@ -6,5 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <getopt.h>
 
 #endif /* end of include guard: COMMON_8Y772XGR */

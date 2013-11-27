@@ -16,6 +16,7 @@
 #include <pthread.h>
 
 
+#define DEFAULT_SERVER_PORT 28000
 
 // --------------------------------------------------------------------------
 // DÉFINITION DE LA LISTE DES COMMANDES

@@ -14,12 +14,20 @@
 
 //communication client-serveur
 #include <client-server.h>
-
 //utilités serveur
 #include <channels.h>
 #include <connections.h>
-
 // common
 #include <common.h>
+
+#define TRY_HELP "essayez inf1010tp2-server --help"
+#define HELP "inf1010tp2-server -- serveur de chat\n\
+SYNOPSYS\n\
+\tinf1010tp2-server [OPTIONS]\n\
+OPTIONS\n\
+\t-h|--help\n\
+\t\tAffiche ce texte d'aide.\n\
+\t-p|--port port\n\
+\t\tSpécifie le port sur lequel le serveur devra écouter."
 
 #endif /* end of include guard: SERVER_DTVL1IT7 */
