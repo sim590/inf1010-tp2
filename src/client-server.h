@@ -1,15 +1,20 @@
 //-------------------------------------------------------
 // File: client-server.h    Author(s): Simon DÉSAULNIERS
+//                                     Frédéric Hamelin
 // Date: 2013-10-22
 //-------------------------------------------------------
 // Ficheir d'entête pour le client et le serveur.
 //-------------------------------------------------------
-#ifndef CLIENT-SERVER_NN925AM4
-#define CLIENT-SERVER_NN925AM4
+#ifndef CLIENT_SERVER_NN925AM4
+#define CLIENT_SERVER_NN925AM4
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+// threads
+#include <semaphore.h>
+#include <pthread.h>
+
 
 
 // --------------------------------------------------------------------------
@@ -56,16 +61,16 @@
 //
 // ex: /msg fred blablabla
 //  on aurait:
-//  - cmd = "msg"
-//  - arg[0] = "fred"
-//  - arg[3] = "blablabla" 
-//      >>le dernier est tout le temps l'argument 
-//        principale.
+//  - argc = 2
+//  - args[0] = "msg"
+//  - args[1] = "fred"
+//  - main_arg = "blablabla" 
 // --------------------------------------------------
 typedef struct _client_cmd {
     unsigned int type;
-    char cmd[16];
-    char arg[4][256];
+    int argc;
+    char args[5][16];
+    char main_arg[256];
 } client_cmd;
 
 // -------------------------------
@@ -80,7 +85,7 @@ typedef struct _client_message {
 typedef union {
     unsigned int type;
     client_cmd cmd;
-    client_text_message;
+    client_text_message msg;
 } client_packet;
 
-#endif /* end of include guard: CLIENT-SERVER_NN925AM4 */
+#endif /* end of include guard: CLIENT_SERVER_NN925AM4 */
