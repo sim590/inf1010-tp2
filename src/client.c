@@ -1,4 +1,5 @@
-#include <client.h>
+#include "client.h"
+#include <curses.h>
 
 char* server_ip;
 int des;
@@ -41,60 +42,65 @@ int main(void)
 
 void inputCommand()
 {
-    char *str;
-
-    str = malloc(sizeof(char));
+    char * str = malloc(sizeof(char) * 255);
 
     mvwaddstr(inputWin,1,1,"");
     wgetstr(inputWin, str);
-
-    int *position;
-    *position = 0; 
     
-    char *command = malloc(sizeof(char));
-    command = getNextWord(str, position);
-    mvwaddstr(displayWin, 1,1,command);
+    char * command;
+    getNextWord(str,&command);
+    mvwaddstr(displayWin, 7,7,command);
     wrefresh(displayWin);
 
-    if (strcmp(command, "connect") == 0) {
-       // connectToServer();
+    if (!strcmp(command, "connect")) {
+        connectToServer();
     }
-    else if (strcmp(command, "quit") == 0) {
+    else if (!strcmp(command, "quit")) {
         // quit();
     }
     else {
        // sendToServer(); 
     }
 
-    mvwaddstr(displayWin, 1,1,command);
-    wrefresh(displayWin);
-
-
     free(str);
     free(command);
 }
 
-char* getNextWord(char *str,int * position)
+int getNextWord(char *str, char **nextWord)
 {
-    char* word;
-    int initpos = *position;
-    char strTab[sizeof(*str)];
 
-    strcpy(strTab, str);
-
-    while (*position < sizeof(*str) && (sizeof(*word) == 0) || strTab[*position] != ' ') {
-        *position++;
+    char * token = NULL;
+    
+    while (*str == ' ') {
+        str++;
     }
-    word = malloc(sizeof(char)*(*position-initpos)+1);
-    strncpy(word, str+initpos, *position-initpos+1);
-    return word;
-	
+
+    char * inputCopy = strdup(str);
+
+    token = strtok(inputCopy, " ");
+
+    if (!token){
+        *nextWord = NULL;
+        return -1;
+    }
+
+    *nextWord = malloc(sizeof(char) * strlen(token));
+    strcpy(*nextWord,token);
+
+    str += strlen(token);
+
+    free(inputCopy);
+
+    return 0;
 }
 
-//int connectToServer()
-//{
+int connectToServer()
+{ 
+    mvwaddstr(displayWin, 1,1,"Connecting to server...");
+    wrefresh(displayWin);
 
-//}
+    return 0;
+}
 
 //int sendToServer()
 //{
