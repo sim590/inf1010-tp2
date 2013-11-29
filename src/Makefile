@@ -6,16 +6,24 @@
 # Makefile pour le code source du projet inf1010-tp2
 #--------------------------------------------------------
 BINDIR=../bin
-PROGRAM=inf1010-tp2
+PROGRAM=inf1010tp2
 CLISERV_LINK=
-DEBUG=-g
+CC=gcc -g -I. -c
 
 all: client server
-client: client.o
-	gcc -I. -o $(BINDIR)/$(PROGRAM)-client $(CLISERV_LINK) -lncurses client.o 
+client: client.o BINDIR
+	gcc -o $(BINDIR)/$(PROGRAM)-client $(CLISERV_LINK) -lncurses client.o 
 client.o: client.c client.h
-	gcc -I. -c $(DEBUG) client.c
-server: server.o
-	gcc -I. -o $(BINDIR)/$(PROGRAM)-server $(CLISERV_LINK) -lpthread server.o 
+	$(CC) client.c
+server: server.o channels.o connections.o BINDIR
+	gcc -o $(BINDIR)/$(PROGRAM)-server $(CLISERV_LINK) -lpthread server.o channels.o connections.o
 server.o: server.c server.h
-	gcc -I. -c $(DEBUG) server.c
+	$(CC) server.c
+channels.o: channels.c channels.h
+	$(CC) channels.c
+connections.o: connections.c connections.h
+	$(CC) connections.c
+clean:
+	rm -rf *.o
+BINDIR:
+	mkdir -p $(BINDIR)
