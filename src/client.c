@@ -88,6 +88,7 @@ char* getNextWord(char *str,int * position)
     word = malloc(sizeof(char)*(*position-initpos)+1);
     strncpy(word, str+initpos, *position-initpos+1);
     return word;
+	
 }
 
 //int connectToServer()
