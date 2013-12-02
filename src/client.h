@@ -7,13 +7,15 @@
 #include <stdio.h>
 #include <string.h>
 
-WINDOW *create_newwin(int height, int width, int starty, int startx);
+WINDOW *create_newwin(int, int, int, int);
 
-void destroy_win(WINDOW *local_win);
+void destroy_win(WINDOW *);
 
 void inputCommand();
 
-int getNextWord(char * str, char ** nextWord); 
+int getWord(char *, char **, int); 
+
+void connectToServer(char*);
 
 void addText(char*);
 

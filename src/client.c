@@ -3,9 +3,10 @@
 
 char* server_ip;
 int des;
-struct sockaddr_in server;
+struct sockaddr_in s_in;
 WINDOW *displayWin;
 WINDOW *inputWin;
+int sock;
 
 int main(void)
 {
@@ -14,8 +15,9 @@ int main(void)
     start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_CYAN, COLOR_BLACK);
+    init_pair(3, COLOR_GREEN, COLOR_BLACK);
 
-    displayWin = create_newwin(LINES-2,COLS-1,0,0);
+    displayWin = create_newwin(LINES-1,COLS-1,0,0);
     inputWin = create_newwin(1,COLS-1,LINES-1,0);
 
     wattron(displayWin, COLOR_PAIR(1));
@@ -25,7 +27,6 @@ int main(void)
 
     inputCommand();
 
-    sleep(3);
 
     /*  Clean up after ourselves  */
 
@@ -34,13 +35,8 @@ int main(void)
     endwin();
     refresh();
 
-    return 0;
+    exit(EXIT_SUCCESS);
 
-	//if (des = socket(AF_INET, SOCK_STREAM, 0) < 0) {
-	//exit(1);
-	//}
-
-	//server.sin_addr.saddr = inet_addr("")	
 }
 
 void inputCommand()
@@ -52,20 +48,22 @@ void inputCommand()
     waddstr(inputWin,"$");
     wrefresh(inputWin);
     wgetstr(inputWin, str);
-    
-    char * command;
-    getNextWord(str,&command);
 
+    wattron(displayWin, COLOR_PAIR(3));
     addText(str);
+    wattron(displayWin, COLOR_PAIR(1));
+
+    char * command;
+    getWord(str,&command,1);
 
     if (!strcmp(command, "connect")) {
-        connectToServer();
+        connectToServer(str);
     }
     else if (!strcmp(command, "quit")) {
-        // quit();
+        return;
     }
     else {
-       // sendToServer(); 
+       // sendToServer(str); 
     }
 
     free(str);
@@ -74,40 +72,53 @@ void inputCommand()
     inputCommand();
 }
 
-int getNextWord(char *str, char **nextWord)
+int getWord(char * str,char **nextWord, int position)
 {
-
+    int cur_pos = 0;
     char * token = NULL;
+
+    while (cur_pos < position) {
     
-    while (*str == ' ') {
-        str++;
+        token = NULL;
+
+        while (*str == ' ' || *str == '\0') {
+            str++;
+        }
+
+        token = strtok(str, " ");
+
+        if (!token){
+            *nextWord = NULL;
+            return -1;
+        }
+        
+        cur_pos++;
+        str += strlen(token);
     }
-
-    char * inputCopy = strdup(str);
-
-    token = strtok(inputCopy, " ");
-
-    if (!token){
-        *nextWord = NULL;
-        return -1;
-    }
-
-    *nextWord = malloc(sizeof(char) * strlen(token));
+    *nextWord = malloc(sizeof(char) * (strlen(token) + 1));
     strcpy(*nextWord,token);
 
-    str += strlen(token);
-
-    free(inputCopy);
+    //free(inputCopy);
 
     return 0;
 }
 
-int connectToServer()
+void connectToServer(char * str)
 { 
-    mvwaddstr(displayWin, 1,1,"Connecting to server...");
-    wrefresh(displayWin);
+    char * ip_address;
+    getWord(str,&ip_address,2);
 
-    return 0;
+    addText("Connecting to server...");
+    addText(ip_address);
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0)
+    {
+        return;
+    }
+
+    s_in.sin_family = AF_INET;
+    s_in.sin_port = htons(80);
+    inet_aton(ip_address, &s_in.sin_addr);
 }
 
 //int sendToServer()
@@ -150,11 +161,10 @@ void addText(char * text)
 
 void addLine(char * line)
 {
-    wmove(displayWin,1,1);
+    wmove(displayWin,0,0);
     wdeleteln(displayWin);
-    wmove(displayWin,LINES-3,1);
+    wmove(displayWin,LINES-2,0);
     winsertln(displayWin);
     waddstr(displayWin,line);
     wrefresh(displayWin);
-
 }
