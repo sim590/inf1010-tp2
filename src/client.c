@@ -11,17 +11,20 @@ int main(void)
 {
   
     initscr();
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+    init_pair(2, COLOR_CYAN, COLOR_BLACK);
 
-    displayWin = create_newwin(LINES-3,COLS-1,0,0);
-    inputWin = create_newwin(3,COLS-1,LINES-3,0);
+    displayWin = create_newwin(LINES-2,COLS-1,0,0);
+    inputWin = create_newwin(1,COLS-1,LINES-1,0);
+
+    wattron(displayWin, COLOR_PAIR(1));
+    wattron(inputWin, COLOR_PAIR(2));
     wrefresh(displayWin);
     wrefresh(inputWin);
 
-
     inputCommand();
 
-    mvwaddstr(displayWin, 1,1, "Hello, world!");
-    mvwaddstr(inputWin,1,1, "input");
     sleep(3);
 
     /*  Clean up after ourselves  */
@@ -44,13 +47,16 @@ void inputCommand()
 {
     char * str = malloc(sizeof(char) * 255);
 
-    mvwaddstr(inputWin,1,1,"");
+    wmove(inputWin,0,0);
+    winsertln(inputWin);
+    waddstr(inputWin,"$");
+    wrefresh(inputWin);
     wgetstr(inputWin, str);
     
     char * command;
     getNextWord(str,&command);
-    mvwaddstr(displayWin, 7,7,command);
-    wrefresh(displayWin);
+
+    addText(str);
 
     if (!strcmp(command, "connect")) {
         connectToServer();
@@ -64,6 +70,8 @@ void inputCommand()
 
     free(str);
     free(command);
+
+    inputCommand();
 }
 
 int getNextWord(char *str, char **nextWord)
@@ -112,7 +120,6 @@ WINDOW *create_newwin(int height, int width, int starty, int startx)
     WINDOW *local_win;
 
     local_win = newwin(height, width, starty, startx);
-    box(local_win, 0 , 0);     
     wrefresh(local_win);
    
     return local_win;
@@ -123,4 +130,31 @@ void destroy_win(WINDOW *local_win)
     wborder(local_win, ' ', ' ', ' ',' ',' ',' ',' ',' ');
     wrefresh(local_win);
     delwin(local_win);
+}
+
+void addText(char * text)
+{
+    char * text_copy = strdup(text);
+
+    char * token = NULL;
+    
+    do {
+        token = strtok(text_copy, "\n");
+
+        if (token) {
+            text_copy += strlen(token);
+            addLine(token);
+        }
+    } while (token);
+}
+
+void addLine(char * line)
+{
+    wmove(displayWin,1,1);
+    wdeleteln(displayWin);
+    wmove(displayWin,LINES-3,1);
+    winsertln(displayWin);
+    waddstr(displayWin,line);
+    wrefresh(displayWin);
+
 }

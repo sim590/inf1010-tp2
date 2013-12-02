@@ -15,3 +15,6 @@ void inputCommand();
 
 int getNextWord(char * str, char ** nextWord); 
 
+void addText(char*);
+
+void addLine(char*);
