@@ -54,7 +54,7 @@ void inputCommand()
     wattron(displayWin, COLOR_PAIR(1));
 
     char * command;
-    getWord(str,&command,1);
+    getWord(str,&command,1,0);
 
     if (!strcmp(command, "connect")) {
         connectToServer(str);
@@ -62,8 +62,11 @@ void inputCommand()
     else if (!strcmp(command, "quit")) {
         return;
     }
+    else if (!strcmp(command, "msg")) {
+        sendToServer(str,2);
+    }
     else {
-       // sendToServer(str); 
+        sendToServer(str,1); 
     }
 
     free(str);
@@ -72,7 +75,7 @@ void inputCommand()
     inputCommand();
 }
 
-int getWord(char * str,char **nextWord, int position)
+int getWord(char * str,char **nextWord, int position, int main)
 {
     int cur_pos = 0;
     char * token = NULL;
@@ -85,7 +88,11 @@ int getWord(char * str,char **nextWord, int position)
             str++;
         }
 
-        token = strtok(str, " ");
+        if (position - cur_pos == 1 && main) {
+            token = strdup(str); 
+        } else {
+            token = strtok(str, " ");
+        }
 
         if (!token){
             *nextWord = NULL;
@@ -106,7 +113,7 @@ int getWord(char * str,char **nextWord, int position)
 void connectToServer(char * str)
 { 
     char * ip_address;
-    getWord(str,&ip_address,2);
+    getWord(str,&ip_address,2,0);
 
     addText("Connecting to server...");
     addText(ip_address);
@@ -121,10 +128,25 @@ void connectToServer(char * str)
     inet_aton(ip_address, &s_in.sin_addr);
 }
 
-//int sendToServer()
-//{
+int sendToServer(char * str, int argc)
+{
+    int count = 0;
+    struct _client_cmd cmd;
 
-//}
+    cmd.argc = argc;
+    
+    char * arg;
+    while (count < argc) {
+        getWord(str,&arg,count + 1, 0);
+        strcpy(cmd.args[count], arg);
+        count++;
+    }
+
+    getWord(str,&arg,count + 1, 1);
+    
+    strcpy(cmd.main_arg,arg);
+    return 0;
+}
 
 WINDOW *create_newwin(int height, int width, int starty, int startx)
 {  

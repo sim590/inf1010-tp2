@@ -1,4 +1,4 @@
-//#include <client-server.h>
+#include "client-server.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <curses.h>
@@ -13,10 +13,12 @@ void destroy_win(WINDOW *);
 
 void inputCommand();
 
-int getWord(char *, char **, int); 
+int getWord(char *, char **, int, int); 
 
 void connectToServer(char*);
 
 void addText(char*);
 
 void addLine(char*);
+
+int sendToServer(char*,int);
