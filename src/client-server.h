@@ -68,25 +68,42 @@
 //  - main_arg = "blablabla" 
 // --------------------------------------------------
 typedef struct _client_cmd {
-    unsigned int type;
+    unsigned int type; // = 2 
     int argc;
     char args[5][16];
     char main_arg[256];
 } client_cmd;
 
+typedef struct _connection_info {
+    unsigned int type; // = 1 
+    char id[32];
+} connection_info;
+
 // -------------------------------
 // Structure d'un simple message 
 // texte par le client
 // -------------------------------
-typedef struct _client_message {
-    unsigned int type;
+typedef struct _text_msg {
+    unsigned int type; // = 0 
     char message[256];
-} client_text_message;
+} text_msg;
 
 typedef union {
-    unsigned int type;
+    unsigned int type; /* in {-1,0,1,2}
+                        * 1: connexion
+                        * -1: déconnexion
+                        */
     client_cmd cmd;
-    client_text_message msg;
+    text_msg msg;
+    connection_info con_info;
 } client_packet;
+
+typedef union {
+    unsigned int type;  /* in {-1,0,1}.
+                         * -1: fail
+                         *  0: succès
+                         */
+    text_msg msg;
+} server_packet;
 
 #endif /* end of include guard: CLIENT_SERVER_NN925AM4 */

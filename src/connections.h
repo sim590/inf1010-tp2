@@ -14,6 +14,7 @@
 #define CONNECTIONS_5VJMUPC6
 
 #include <common.h>
+#include <client-server.h>
 
 #define DEFAULT_CHANNEL_ID "lobby"
 
@@ -27,8 +28,9 @@
 typedef struct _connection {
     char id[32];
     char channel_id[32];
-    int ip_address;
-    long client_port;
+    int sockfd;
+    struct sockaddr_in addr;
+    int tid;
     struct _connection *next;
     struct _connection *prev;
 } connection;
@@ -49,7 +51,7 @@ typedef struct _connection {
 //  - channel_id;
 //  - ip_address;
 //  - client_port.
-int add_connection(char[], int, long);
+connection* add_connection(char[], int, struct sockaddr_in, int);
 
 //----------------------
 // delete_connection()

@@ -17,7 +17,8 @@ quoi celui-ci fera le traitement et renvera le résultat.
     description: Envoie un message à l'utilisateur spécifié.
     synopsis: /msg <nom_utilisateur> <message>
      - nom_utilisateur: Le nom d'utilisateur de la personne à qui envoyer le
-     message.
+                        message. Si le nom d'utilisateur est "-", envoyer à tous
+                        les clients connectés.
      - message: Le message à envoyer.
 
 - names::
@@ -31,7 +32,7 @@ quoi celui-ci fera le traitement et renvera le résultat.
 - connect::
     description: Connecte le client au serveur spécifié.
     synopsis: /connect <nome_hôte>
-         - nome_hôte: Le nom d'ĥôte du serveur auquel se connecter.
+     - nome_hôte: Le nom d'ĥôte du serveur auquel se connecter.
 
 - join::
     description: Change le canal dans lequel le client clavarde.

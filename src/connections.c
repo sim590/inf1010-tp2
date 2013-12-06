@@ -14,30 +14,37 @@
 connection *first_con = NULL;
 connection *last_con = NULL;
 
-int add_connection(char id[], int ip_address, long client_port)
+connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , int tid)
 {
     // ne peut ajouter deux fois la même connexion
     if (!find_connection(id, NULL))
-        return -1;
+        return NULL;
 
     connection *new_con, *prev_con;
     // impossible d'allouer de la mémoire.
     if (!(new_con = malloc(sizeof(connection))))
-        return -2;
+        return NULL;
 
-    *new_con = (connection) {.channel_id = DEFAULT_CHANNEL_ID, .ip_address = ip_address, .client_port = client_port, .next = NULL, .prev = NULL };
+    *new_con = (connection) {
+        .channel_id = DEFAULT_CHANNEL_ID, 
+        .sockfd = sockfd,
+        .addr = addr,
+        .tid = tid,
+        .next = NULL, 
+        .prev = NULL 
+    };
     strncpy(new_con->id, id, 32);
 
     // liste vide.
     if (!first_con && !last_con) {
         first_con = last_con = new_con;
-        return 0;
+        return new_con;
     }
 
     prev_con->next = new_con;
     new_con->prev = prev_con;
 
-    return 0;
+    return new_con;
 }
 
 int remove_connection(char id[])
