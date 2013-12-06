@@ -32,7 +32,6 @@ int main(void)
     destroy_win(displayWin);
     destroy_win(inputWin);
     endwin();
-    refresh();
 
     exit(EXIT_SUCCESS);
 
@@ -155,8 +154,7 @@ int sendMsgToServer(char * str)
     client_packet pkt;
 
     pkt.type = 0;
-    pkt.msg.type = 0;
-    strcpy(pkt.msg.message,str);
+    strcpy(pkt.message,str);
 
     return 0;
 }
