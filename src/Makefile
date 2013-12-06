@@ -12,7 +12,7 @@ CC=gcc -g -I. -c
 
 all: client server
 client: client.o BINDIR
-	gcc -o $(BINDIR)/$(PROGRAM)-client $(CLISERV_LINK) -lncurses client.o 
+	gcc -o $(BINDIR)/$(PROGRAM)-client $(CLISERV_LINK) client.o -lncurses
 client.o: client.c client.h
 	$(CC) client.c
 server: server.o channels.o connections.o BINDIR

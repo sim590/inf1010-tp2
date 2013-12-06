@@ -1,11 +1,11 @@
-#include "client-server.h"
+#include <client-server.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <curses.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <curses.h>
 
 WINDOW *create_newwin(int, int, int, int);
 
@@ -21,4 +21,8 @@ void addText(char*);
 
 void addLine(char*);
 
-int sendToServer(char*,int);
+int sendCmdToServer(char*,int);
+
+int sendMsgToServer(char*);
+
+int sendPktToServer(client_packet);

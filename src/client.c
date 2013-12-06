@@ -1,5 +1,4 @@
-#include "client.h"
-#include <curses.h>
+#include <client.h>
 
 char* server_ip;
 int des;
@@ -53,24 +52,31 @@ void inputCommand()
     addText(str);
     wattron(displayWin, COLOR_PAIR(1));
 
-    char * command;
-    getWord(str,&command,1,0);
-
-    if (!strcmp(command, "connect")) {
-        connectToServer(str);
-    }
-    else if (!strcmp(command, "quit")) {
-        return;
-    }
-    else if (!strcmp(command, "msg")) {
-        sendToServer(str,2);
+    if (*str != '/') {
+       sendCmdToServer(str, 0);
     }
     else {
-        sendToServer(str,1); 
+    
+        char * command;
+        getWord(str,&command,1,0);
+
+        if (!strcmp(command, "connect")) {
+            connectToServer(str);
+        }
+        else if (!strcmp(command, "quit")) {
+            return;
+        }
+        else if (!strcmp(command, "msg")) {
+            sendCmdToServer(str,2);
+        }
+        else {
+            sendCmdToServer(str,1); 
+        }
+
+        free(command);
     }
 
     free(str);
-    free(command);
 
     inputCommand();
 }
@@ -80,6 +86,9 @@ int getWord(char * str,char **nextWord, int position, int main)
     int cur_pos = 0;
     char * token = NULL;
 
+    if (*str == '/') {
+        str++;
+    }
     while (cur_pos < position) {
     
         token = NULL;
@@ -105,7 +114,6 @@ int getWord(char * str,char **nextWord, int position, int main)
     *nextWord = malloc(sizeof(char) * (strlen(token) + 1));
     strcpy(*nextWord,token);
 
-    //free(inputCopy);
 
     return 0;
 }
@@ -126,25 +134,59 @@ void connectToServer(char * str)
     s_in.sin_family = AF_INET;
     s_in.sin_port = htons(80);
     inet_aton(ip_address, &s_in.sin_addr);
+
+    if (connect(sock, &s_in, sizeof(s_in)) < 0) {
+        //TODO: gérer ça
+        exit(EXIT_FAILURE);
+    }
+
+    client_packet pkt;
+
+    pkt.type = 1;
+    
+    char * user_id;
+    getWord(str,&user_id,3,0);
+
+    strcpy(pkt.con_info.id, user_id);
 }
 
-int sendToServer(char * str, int argc)
+int sendMsgToServer(char * str)
+{
+    client_packet pkt;
+
+    pkt.type = 0;
+    pkt.msg.type = 0;
+    strcpy(pkt.msg.message,str);
+
+    return 0;
+}
+
+int sendCmdToServer(char * str, int argc)
 {
     int count = 0;
-    struct _client_cmd cmd;
+    client_packet pkt;
 
-    cmd.argc = argc;
-    
+    pkt.cmd.argc = argc;
+    pkt.type = 2;
+    pkt.cmd.type = 2;
+
     char * arg;
     while (count < argc) {
         getWord(str,&arg,count + 1, 0);
-        strcpy(cmd.args[count], arg);
+        strcpy(pkt.cmd.args[count], arg);
         count++;
     }
 
     getWord(str,&arg,count + 1, 1);
     
-    strcpy(cmd.main_arg,arg);
+    strcpy(pkt.cmd.main_arg,arg);
+    return 0;
+}
+
+int sendPktToServer(client_packet pkt)
+{
+    
+
     return 0;
 }
 
