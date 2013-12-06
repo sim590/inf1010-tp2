@@ -16,7 +16,7 @@ client: client.o BINDIR
 client.o: client.c client.h
 	$(CC) client.c
 server: server.o channels.o connections.o BINDIR
-	gcc -o $(BINDIR)/$(PROGRAM)-server $(CLISERV_LINK) -lpthread server.o channels.o connections.o
+	gcc -o $(BINDIR)/$(PROGRAM)-server $(CLISERV_LINK) server.o channels.o connections.o -lpthread
 server.o: server.c server.h
 	$(CC) server.c
 channels.o: channels.c channels.h
