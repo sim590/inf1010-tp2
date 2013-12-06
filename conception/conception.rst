@@ -25,9 +25,26 @@ quoi celui-ci fera le traitement et renvera le résultat.
     synopsis: /names
     description: Requête de la liste des clients connectés dans le canal.
 
+    Affichage à l'écran (suggestion):
+
+    Clients dans votre canal:
+    -------------------------
+    [simon] [fred] [patate_poel] ...
+    [mathieu] [simon2] [balbal] ...
+    ...
+
 - list::
     description: Requête de la liste de canaux disponibles.
     synopsis: /list
+
+    Affichage à l'écran (suggestion):
+
+    Canaux ouverts sur le serveur:
+    ------------------------------
+    [<nom_canal>]: <topic>
+    [<nom_canal>]: <topic>
+    [<nom_canal>]: <topic>
+    ...
 
 - topic::
     description: Requête du topic du canal.
@@ -50,6 +67,9 @@ quoi celui-ci fera le traitement et renvera le résultat.
 - quit::
     description: Ferme le programme.
     synopsis: /quit
+
+    C'est la combinaison d'un /disconnect avec la fermeture du programme. Par
+    conséquent, le serveur s'attendra à reçevoir un paquet "/disconnect".
 
 **Lorsqu'il y a un retour du serveur, cela consiste toujours en une liste de
 caractères à afficher à l'écran du client.**

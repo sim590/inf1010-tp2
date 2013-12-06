@@ -12,13 +12,16 @@
 
 int reception_socket_fd, server_port = DEFAULT_SERVER_PORT;
 struct sockaddr_in srv_addr, cli_addr;
+
+extern sem_t *cons_sem;
 extern connection *first_con;
+extern channel *first_chan;
 
 int init_socket()
 {
     // Création du scoket de réception
     reception_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (reception_socket_fd) {
+    if (reception_socket_fd <= 0) {
         perror("Erreur lors de l'obtention du socket de réception.");
         return -1;
     }
@@ -87,12 +90,13 @@ void* handle_client_communication(void *argss)
     }
 
     // ajout de la connexion avec le client à la liste
-    connection *cur, *my_con = add_connection(
+    connection *cur_con, *my_con = add_connection(
                 cli_packet.con_info.id, 
                 sockfd,
                 args->cli_addr, 
                 my_tid
             );
+    channel *cur_chan;
 
     // ne peut ajouter la connexion avec le client à la liste.
     if (!my_con) {
@@ -109,32 +113,125 @@ void* handle_client_communication(void *argss)
 
         // s'occuper des requêtes du clients
         while (1) {
+            memset(&srv_packet, 0, sizeof(server_packet));
 
             if (recv_cli_packet(my_con, &cli_packet)) {
+                srv_packet.type = 0;
+                send_srv_packet(my_con, &srv_packet);
                 close_connection(sockfd, args);
                 return NULL;
             }
 
             switch(cli_packet.type) {
+                // ----------------------------------------------
                 // déconnexion
+                // TODO: se déconnecter avec un paquet cmd ou
+                // avec un simple flag client_packet.type = -1 ?
+                // ----------------------------------------------
                 case -1:
                     close_connection(sockfd, args);
                     return NULL;
+                // ---------------------------------------
                 // envoie d'un message au canal du client
+                // ---------------------------------------
                 case 0:
-                    cur = first_con;
+                    cur_con = first_con;
                     srv_packet.type = 1;
                     strcpy(srv_packet.message, cli_packet.message);
-                    while (cur) {
-                        if (!strcmp(cur->channel_id, my_con->channel_id)) {
-                            // send sur le socket du client cur.
-                            send_srv_packet(cur, &srv_packet);
-                        }
+                    while (cur_con) {
+                        // send sur le socket du client cur.
+                        if (!strcmp(cur_con->channel_id, my_con->channel_id))
+                            send_srv_packet(cur_con, &srv_packet);
                     }
                     break;
-                //TODO:
-                // commande format "/cmd arg1 arg2 ..."
+                // ---------------------------------
+                // commandes: /cmd <arg1> <arg2> ...
+                // ---------------------------------
                 case 2:
+                    cur_con = first_con;
+
+                    // ---------------------------------
+                    // /msg <nom_utilisateur> <message>
+                    // ---------------------------------
+                    if (!strcmp(cli_packet.cmd.args[0], "msg")) {
+                        srv_packet.type = 1;
+                        strcpy(srv_packet.message, cli_packet.message);
+
+                        // message à tous les clients connectés au serveur
+                        if (!strcmp(cli_packet.cmd.args[1], "-")) {
+                            while (cur_con) {
+                                send_srv_packet(cur_con, &srv_packet);
+                                cur_con = cur_con->next;
+                            }
+                        }
+                        // message à un client en particulier
+                        else if (!find_connection(cli_packet.cmd.args[1], &cur_con))
+                                send_srv_packet(cur_con, &srv_packet);
+                    }
+
+                    // -------
+                    // /names
+                    // -------
+                    else if (!strcmp(cli_packet.cmd.args[0], "names")) {
+                        srv_packet.type = 2;
+                        memset(srv_packet.big_message, 0, BIG_MESSAGE_SIZE);
+
+                        while (cur_con) {
+                            if (!strcmp(cur_con->channel_id, my_con->channel_id)) {
+                                strcat(srv_packet.big_message, cur_con->id);
+                                if (cur_con->next)
+                                    strcat(srv_packet.big_message, ":");
+                            }
+                        }
+                        send_srv_packet(my_con, &srv_packet);
+                    }
+
+                    // ------
+                    // /list
+                    // ------
+                    else if (!strcmp(cli_packet.cmd.args[0], "list")) {
+                        cur_chan = first_chan;
+
+                        srv_packet.type = 2;
+                        memset(srv_packet.big_message, 0, BIG_MESSAGE_SIZE);
+
+                        while (cur_chan) {
+                            // contenu de la forme:
+                            //
+                            //      channel1\Nous sommes dans le canal 1
+                            //      channel2\Le canal deux (2), c'est le meilleur!
+                            //
+                            strcat(srv_packet.big_message, cur_chan->id);
+                            strcat(srv_packet.big_message, "\\");
+                            strcat(srv_packet.big_message, cur_chan->topic);
+                            strcat(srv_packet.big_message, "\n");
+                            
+                            cur_chan = cur_chan->next;
+                        }
+                        send_srv_packet(my_con, &srv_packet);
+                    }
+
+                    // -------------------
+                    // /join <nom_channel>
+                    // -------------------
+                    else if (!strcmp(cli_packet.cmd.args[0], "join")) {
+                        wait_for_connection(my_con);
+                        strcpy(my_con->channel_id, cli_packet.cmd.args[1]);
+                        sem_post(my_con->sem);
+                    }
+
+                    // ---------------------------------------------
+                    // /disconnect 
+                    //
+                    // TODO: se déconnecter avec un paquet cmd ou
+                    // avec un simple flag client_packet.type = -1 ?
+                    // ---------------------------------------------
+                    else if (!strcmp(cli_packet.cmd.args[0], "disconnect")) {
+                        srv_packet = (server_packet) {.type = 0};
+                        send_srv_packet(my_con, &srv_packet);
+                        close_connection(sockfd, args);
+                        return NULL;
+                    }
                     break;
                 // mauvais paquet
                 default:

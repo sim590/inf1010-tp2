@@ -18,7 +18,6 @@
 
 #define DEFAULT_CHANNEL_ID "lobby"
 
-sem_t *cons_sem;
 //----------------------------------
 //----------------------------------
 // Structure d'une connexion dans 

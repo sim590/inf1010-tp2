@@ -74,7 +74,7 @@
 typedef struct _client_cmd {
     unsigned int type; // = 2 
     int argc;
-    char args[5][16];
+    char args[5][32];
     char main_arg[256];
 } client_cmd;
 
@@ -101,7 +101,7 @@ typedef union {
 typedef union {
     unsigned int type;  /* in {-1,0,1}.
                          * -1: fail
-                         *  0: succès de connexion
+                         *  0: succès de connexion ou de déconnexion
                          *  1: message
                          *  2: big_message
                          */
