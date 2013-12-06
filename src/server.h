@@ -39,7 +39,7 @@ int init_socket();
 void receive_connections();
 void* handle_client_communication(void*);
 void close_connection(int, hcc_args*);
-int recv_cli_packet(int, client_packet*);
-int send_srv_packet(int,server_packet*);
+int recv_cli_packet(connection*, client_packet*);
+int send_srv_packet(connection*,server_packet*);
 int get_options(int,char*[]);
 #endif /* end of include guard: SERVER_DTVL1IT7 */

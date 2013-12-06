@@ -5,8 +5,8 @@
 //-------------------------------------------------------
 // Ficheir d'entête pour le client et le serveur.
 //-------------------------------------------------------
-#ifndef CLIENT-SERVER_NN925AM4
-#define CLIENT-SERVER_NN925AM4
+#ifndef CLIENT_SERVER_NN925AM4
+#define CLIENT_SERVER_NN925AM4
 #define SERVER_PORT 1346;
 
 #include <sys/socket.h>
@@ -18,6 +18,7 @@
 
 
 #define DEFAULT_SERVER_PORT 28000
+#define BIG_MESSAGE_SIZE 1024
 
 // --------------------------------------------------------------------------
 // DÉFINITION DE LA LISTE DES COMMANDES
@@ -26,7 +27,9 @@
 //  description: Envoie un message à l'utilisateur spécifié.
 //  synopsis: /msg <nom_utilisateur> <message>
 //      - nom_utilisateur: Le nom d'utilisateur de la personne à qui envoyer le
-//      message.
+//                         message. Si le nom d'utilisateur est "-", le message
+//                         est envoyé à tous les utilisateurs connectés au
+//                         serveur.
 //      - message: Le message à envoyer.
 //
 // - names
@@ -75,36 +78,35 @@ typedef struct _client_cmd {
     char main_arg[256];
 } client_cmd;
 
+// --------------------------------------------------------------
+// Structure contenant les informations nécessaires au serveur
+// lors de la connexion du client.
+// --------------------------------------------------------------
 typedef struct _connection_info {
     unsigned int type; // = 1 
     char id[32];
 } connection_info;
 
-// -------------------------------
-// Structure d'un simple message 
-// texte par le client
-// -------------------------------
-typedef struct _text_msg {
-    unsigned int type; // = 0 
-    char message[256];
-} text_msg;
-
 typedef union {
     unsigned int type; /* in {-1,0,1,2}
+                        * 0: message texte.
                         * 1: connexion
                         * -1: déconnexion
                         */
     client_cmd cmd;
-    text_msg msg;
     connection_info con_info;
+    char message[256];
 } client_packet;
 
 typedef union {
     unsigned int type;  /* in {-1,0,1}.
                          * -1: fail
-                         *  0: succès
+                         *  0: succès de connexion
+                         *  1: message
+                         *  2: big_message
                          */
-    text_msg msg;
+    char message[256];
+    char big_message[BIG_MESSAGE_SIZE];
 } server_packet;
 
 #endif /* end of include guard: CLIENT_SERVER_NN925AM4 */

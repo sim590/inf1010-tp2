@@ -18,6 +18,7 @@
 
 #define DEFAULT_CHANNEL_ID "lobby"
 
+sem_t *cons_sem;
 //----------------------------------
 //----------------------------------
 // Structure d'une connexion dans 
@@ -31,6 +32,8 @@ typedef struct _connection {
     int sockfd;
     struct sockaddr_in addr;
     int tid;
+    sem_t *sem;
+    int flagged_deleted;
     struct _connection *next;
     struct _connection *prev;
 } connection;
@@ -38,6 +41,16 @@ typedef struct _connection {
 //-------------------------------------------------
 // Fonctions associés à la gestion des channels. 
 //-------------------------------------------------
+
+//-----------------------------------------------
+// wait_for_connection()
+// valeurs de retour:
+//  0: succès;
+//  -1: échec
+// Attends après le sémaphore d'une connexion 
+// donnée en s'assurant que la connexion n'ait 
+// pas été supprimée entre temps.
+int wait_for_connection(connection*);
 
 //-----------------
 // add_connection()
