@@ -29,6 +29,10 @@ quoi celui-ci fera le traitement et renvera le résultat.
     description: Requête de la liste de canaux disponibles.
     synopsis: /list
 
+- topic::
+    description: Requête du topic du canal.
+    synopsis: /topic
+
 - connect::
     description: Connecte le client au serveur spécifié.
     synopsis: /connect <nome_hôte>

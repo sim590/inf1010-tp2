@@ -47,6 +47,12 @@ void receive_connections()
         exit(EXIT_FAILURE);
     }
 
+    cons_sem = malloc(sizeof(sem_t));
+    if (!cons_sem || sem_init(cons_sem, 0, 1)) {
+        fprintf(stderr, "Impossible d'initialiser la liste de connexion..\n");
+        exit(EXIT_FAILURE);
+    }
+
     while (1) {
         sockfd = accept(reception_socket_fd, (struct sockaddr*) &cli_addr, &clilen);
 
@@ -75,7 +81,7 @@ void* handle_client_communication(void *argss)
     int sockfd = args->cli_socket, n=0;
 
     // lecture du premier paquet (réception du id de client)
-    if (recv_cli_packet(sockfd, &cli_packet)) {
+    if (recv(sockfd, (void*)&cli_packet, sizeof(client_packet), 0)) {
         close_connection(sockfd, args);
         return NULL;
     }
@@ -96,7 +102,7 @@ void* handle_client_communication(void *argss)
     else {
         // confirmation du succès
         srv_packet = (server_packet) {.type = 0};
-        if (send_srv_packet(sockfd, &srv_packet)) {
+        if (send_srv_packet(my_con, &srv_packet)) {
             close_connection(sockfd, args);
             return NULL;
         }
@@ -104,7 +110,7 @@ void* handle_client_communication(void *argss)
         // s'occuper des requêtes du clients
         while (1) {
 
-            if (recv_cli_packet(sockfd, &cli_packet)) {
+            if (recv_cli_packet(my_con, &cli_packet)) {
                 close_connection(sockfd, args);
                 return NULL;
             }
@@ -117,12 +123,12 @@ void* handle_client_communication(void *argss)
                 // envoie d'un message au canal du client
                 case 0:
                     cur = first_con;
+                    srv_packet.type = 1;
+                    strcpy(srv_packet.message, cli_packet.message);
                     while (cur) {
                         if (!strcmp(cur->channel_id, my_con->channel_id)) {
                             // send sur le socket du client cur.
-                            srv_packet.type = 0;
-                            strcpy(srv_packet.msg.message, cli_packet.msg.message);
-                            send_srv_packet(cur->sockfd, &srv_packet);
+                            send_srv_packet(cur, &srv_packet);
                         }
                     }
                     break;
@@ -147,33 +153,41 @@ void close_connection(int sockfd, hcc_args *args)
     close(sockfd);
 }
 
-//TODO: gérer des sémaphore pour l'écriture sur le socket.
-int recv_cli_packet(int sockfd, client_packet *packet)
+int recv_cli_packet(connection *con, client_packet *packet)
 {
+    // La connexion est soit supprimée ou en voie de l'être.
+    if (wait_for_connection(con))
+        return -1;
+
     int n=0, nattempts=0;
 
     while (n<=0) {
-        n = recv(sockfd, (void*)packet, sizeof(client_packet), 0);
+        n = recv(con->sockfd, (void*)packet, sizeof(client_packet), 0);
         
         if (++nattempts > 5) {
             return -1;
         }
     }
+    sem_post(con->sem);
     return 0;
 }
 
-//TODO: gérer des sémaphore pour l'écriture sur le socket.
-int send_srv_packet(int sockfd, server_packet *packet)
+int send_srv_packet(connection *con, server_packet *packet)
 {
+    // La connexion est soit supprimée ou en voie de l'être.
+    if (wait_for_connection(con))
+        return -1;
+
     int n=0, nattempts=0;
 
     while (n<=0) {
-        n = send(sockfd, (void*)packet, sizeof(server_packet), 0);
+        n = send(con->sockfd, (void*)packet, sizeof(server_packet), 0);
 
         if (++nattempts > 5) {
             return -1;
         }
     }
+    sem_post(con->sem);
     return 0;
 }
 
