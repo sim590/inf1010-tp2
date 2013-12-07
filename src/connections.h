@@ -17,6 +17,8 @@
 #include <client-server.h>
 
 #define DEFAULT_CHANNEL_ID "lobby"
+#define DEFAULT_CHANNEL_TOPIC "Bienvenue sur le serveur inf1010tp2. Vous avez "\
+                              "été placé dans le canal par défaut (\"lobby\")."
 
 //----------------------------------
 //----------------------------------
@@ -30,7 +32,7 @@ typedef struct _connection {
     char channel_id[32];
     int sockfd;
     struct sockaddr_in addr;
-    int tid;
+    pthread_t tid;
     sem_t *sem;
     int flagged_deleted;
     struct _connection *next;
@@ -63,7 +65,7 @@ int wait_for_connection(connection*);
 //  - channel_id;
 //  - ip_address;
 //  - client_port.
-connection* add_connection(char[], int, struct sockaddr_in, int);
+connection* add_connection(char[], int, struct sockaddr_in, pthread_t);
 
 //----------------------
 // delete_connection()

@@ -30,10 +30,10 @@ int wait_for_connection(connection *con)
     return 0;
 }
 
-connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , int tid)
+connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , pthread_t tid)
 {
     // ne peut ajouter deux fois la même connexion
-    if (find_connection(id, NULL))
+    if (!find_connection(id, NULL))
         return NULL;
 
     connection *new_con, *last = last_con;
@@ -54,10 +54,8 @@ connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , int 
         free(new_con);
         return NULL;
     }
-    strncpy(new_con->id, id, 31);
-    new_con->id[32] = '\0';
-    strncpy(new_con->channel_id,  DEFAULT_CHANNEL_ID, 31);
-    new_con->channel_id[32] = '\0';
+    strcpy(new_con->id, id);
+    strcpy(new_con->channel_id,  DEFAULT_CHANNEL_ID);
 
     // liste vide.
     sem_wait(cons_sem);
