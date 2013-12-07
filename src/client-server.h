@@ -2,12 +2,14 @@
 // File: client-server.h    Author(s): Simon DÉSAULNIERS
 //                                     Frédéric Hamelin
 // Date: 2013-10-22
+//
+// © Copyright 2013 Simon Désaulniers, 
+//                  Frédéric Hamelin. All Rights Reserved.
 //-------------------------------------------------------
-// Ficheir d'entête pour le client et le serveur.
+// Fichier d'entête pour le client et le serveur.
 //-------------------------------------------------------
 #ifndef CLIENT_SERVER_NN925AM4
 #define CLIENT_SERVER_NN925AM4
-#define SERVER_PORT 1346;
 
 #include <sys/socket.h>
 #include <netinet/in.h>

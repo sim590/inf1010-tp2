@@ -38,7 +38,7 @@ typedef struct _hcc_args {
 int init_socket();
 void receive_connections();
 void* handle_client_communication(void*);
-void close_connection(int, hcc_args*);
+void close_connection(connection*, hcc_args*);
 int recv_cli_packet(connection*, client_packet*);
 int send_srv_packet(connection*,server_packet*);
 int get_options(int,char*[]);

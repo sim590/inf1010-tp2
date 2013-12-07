@@ -42,7 +42,6 @@ connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , int 
         return NULL;
 
     *new_con = (connection) {
-        .channel_id = DEFAULT_CHANNEL_ID, 
         .sockfd = sockfd,
         .addr = addr,
         .tid = tid,
@@ -55,7 +54,10 @@ connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , int 
         free(new_con);
         return NULL;
     }
-    strncpy(new_con->id, id, 32);
+    strncpy(new_con->id, id, 31);
+    new_con->id[32] = '\0';
+    strncpy(new_con->channel_id,  DEFAULT_CHANNEL_ID, 31);
+    new_con->channel_id[32] = '\0';
 
     // liste vide.
     sem_wait(cons_sem);

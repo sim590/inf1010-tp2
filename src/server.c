@@ -85,7 +85,8 @@ void* handle_client_communication(void *argss)
 
     // lecture du premier paquet (réception du id de client)
     if (recv(sockfd, (void*)&cli_packet, sizeof(client_packet), 0)) {
-        close_connection(sockfd, args);
+        free(args);
+        close(sockfd);
         return NULL;
     }
 
@@ -100,14 +101,14 @@ void* handle_client_communication(void *argss)
 
     // ne peut ajouter la connexion avec le client à la liste.
     if (!my_con) {
-        srv_packet = (server_packet) {.type = -1};
+        srv_packet.type = -1;
         send(sockfd, (void*)&srv_packet, sizeof(server_packet), 0);
     }
     else {
         // confirmation du succès
         srv_packet = (server_packet) {.type = 0};
         if (send_srv_packet(my_con, &srv_packet)) {
-            close_connection(sockfd, args);
+            close_connection(my_con, args);
             return NULL;
         }
 
@@ -118,7 +119,7 @@ void* handle_client_communication(void *argss)
             if (recv_cli_packet(my_con, &cli_packet)) {
                 srv_packet.type = 0;
                 send_srv_packet(my_con, &srv_packet);
-                close_connection(sockfd, args);
+                close_connection(my_con, args);
                 return NULL;
             }
 
@@ -129,7 +130,7 @@ void* handle_client_communication(void *argss)
                 // avec un simple flag client_packet.type = -1 ?
                 // ----------------------------------------------
                 case -1:
-                    close_connection(sockfd, args);
+                    close_connection(my_con, args);
                     return NULL;
                 // ---------------------------------------
                 // envoie d'un message au canal du client
@@ -155,18 +156,19 @@ void* handle_client_communication(void *argss)
                     // ---------------------------------
                     if (!strcmp(cli_packet.cmd.args[0], "msg")) {
                         srv_packet.type = 1;
-                        strcpy(srv_packet.message, cli_packet.message);
+                        strcpy(srv_packet.message, cli_packet.cmd.main_arg);
 
                         // message à tous les clients connectés au serveur
                         if (!strcmp(cli_packet.cmd.args[1], "-")) {
                             while (cur_con) {
-                                send_srv_packet(cur_con, &srv_packet);
+                                if (cur_con != my_con)
+                                    send_srv_packet(cur_con, &srv_packet);
                                 cur_con = cur_con->next;
                             }
                         }
                         // message à un client en particulier
                         else if (!find_connection(cli_packet.cmd.args[1], &cur_con))
-                                send_srv_packet(cur_con, &srv_packet);
+                            send_srv_packet(cur_con, &srv_packet);
                     }
 
                     // -------
@@ -229,7 +231,7 @@ void* handle_client_communication(void *argss)
                     else if (!strcmp(cli_packet.cmd.args[0], "disconnect")) {
                         srv_packet = (server_packet) {.type = 0};
                         send_srv_packet(my_con, &srv_packet);
-                        close_connection(sockfd, args);
+                        close_connection(my_con, args);
                         return NULL;
                     }
                     break;
@@ -240,14 +242,15 @@ void* handle_client_communication(void *argss)
         }
     }
 
-    close_connection(sockfd, args);
+    close_connection(my_con, args);
     return NULL;
 }
 
-void close_connection(int sockfd, hcc_args *args)
+void close_connection(connection *con, hcc_args *args)
 {
     free(args);
-    close(sockfd);
+    close(con->sockfd);
+    remove_connection(con->id);
 }
 
 int recv_cli_packet(connection *con, client_packet *packet)
