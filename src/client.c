@@ -127,12 +127,15 @@ void connectToServer(char * str)
     {
         return;
     }
+    
+    char * port;
+    getWord(str,&port,3,0);
 
     s_in.sin_family = AF_INET;
-    s_in.sin_port = htons(80);
+    s_in.sin_port = htons(atoi(port));
     inet_aton(ip_address, &s_in.sin_addr);
 
-    if (connect(sock, &s_in, sizeof(s_in)) < 0) {
+    if (connect(sock,(struct sockaddr*)&s_in, sizeof(s_in)) < 0) {
         //TODO: gérer ça
         exit(EXIT_FAILURE);
     }
@@ -142,7 +145,7 @@ void connectToServer(char * str)
     pkt.type = 1;
     
     char * user_id;
-    getWord(str,&user_id,3,0);
+    getWord(str,&user_id,4,0);
 
     strcpy(pkt.con_info.id, user_id);
 }
@@ -153,6 +156,8 @@ int sendMsgToServer(char * str)
 
     pkt.type = 0;
     strcpy(pkt.message,str);
+
+    sendPktToServer(pkt);
 
     return 0;
 }
@@ -176,12 +181,15 @@ int sendCmdToServer(char * str, int argc)
     getWord(str,&arg,count + 1, 1);
     
     strcpy(pkt.cmd.main_arg,arg);
+
+    sendPktToServer(pkt);
+
     return 0;
 }
 
 int sendPktToServer(client_packet pkt)
 {
-    
+    send(sock,(void*)&pkt, sizeof(pkt),0);
 
     return 0;
 }
