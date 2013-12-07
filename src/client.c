@@ -182,7 +182,8 @@ int sendMsgToServer(char * str)
     client_packet pkt;
 
     pkt.type = 0;
-    strcpy(pkt.message,str);
+    pkt.msg.type = 0;
+    strcpy(pkt.msg.message,str);
 
     sendPktToServer(pkt);
 
