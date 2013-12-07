@@ -84,7 +84,7 @@ void* handle_client_communication(void *argss)
     int sockfd = args->cli_socket, n=0;
 
     // lecture du premier paquet (réception du id de client)
-    if (recv(sockfd, (void*)&cli_packet, sizeof(client_packet), 0)) {
+    if (recv(sockfd, (void*)&cli_packet, sizeof(client_packet), 0) <= 0) {
         free(args);
         close(sockfd);
         return NULL;
@@ -109,6 +109,7 @@ void* handle_client_communication(void *argss)
         srv_packet = (server_packet) {.type = 0};
         if (send_srv_packet(my_con, &srv_packet)) {
             close_connection(my_con, args);
+            close(sockfd);
             return NULL;
         }
 
@@ -117,46 +118,37 @@ void* handle_client_communication(void *argss)
             memset(&srv_packet, 0, sizeof(server_packet));
 
             if (recv_cli_packet(my_con, &cli_packet)) {
-                srv_packet.type = 0;
-                send_srv_packet(my_con, &srv_packet);
                 close_connection(my_con, args);
                 return NULL;
             }
 
             switch(cli_packet.type) {
-                // ----------------------------------------------
-                // déconnexion
-                // TODO: se déconnecter avec un paquet cmd ou
-                // avec un simple flag client_packet.type = -1 ?
-                // ----------------------------------------------
-                case -1:
-                    close_connection(my_con, args);
-                    return NULL;
                 // ---------------------------------------
                 // envoie d'un message au canal du client
-                // ---------------------------------------
-                case 0:
+                // --------------------------------------- ***testé
+                case CLI_TXT:
                     cur_con = first_con;
-                    srv_packet.type = 1;
-                    strcpy(srv_packet.message, cli_packet.message);
+                    srv_packet.type = SRV_TXT;
+                    strcpy(srv_packet.msg.message, cli_packet.msg.message);
                     while (cur_con) {
                         // send sur le socket du client cur.
-                        if (!strcmp(cur_con->channel_id, my_con->channel_id))
+                        if (cur_con != my_con && !strcmp(cur_con->channel_id, my_con->channel_id))
                             send_srv_packet(cur_con, &srv_packet);
+                        cur_con = cur_con->next;
                     }
                     break;
                 // ---------------------------------
                 // commandes: /cmd <arg1> <arg2> ...
                 // ---------------------------------
-                case 2:
+                case CLI_CMD:
                     cur_con = first_con;
 
                     // ---------------------------------
                     // /msg <nom_utilisateur> <message>
-                    // ---------------------------------
+                    // --------------------------------- TODO: tester
                     if (!strcmp(cli_packet.cmd.args[0], "msg")) {
-                        srv_packet.type = 1;
-                        strcpy(srv_packet.message, cli_packet.cmd.main_arg);
+                        srv_packet.type = SRV_TXT;
+                        strcpy(srv_packet.msg.message, cli_packet.cmd.main_arg);
 
                         // message à tous les clients connectés au serveur
                         if (!strcmp(cli_packet.cmd.args[1], "-")) {
@@ -173,29 +165,30 @@ void* handle_client_communication(void *argss)
 
                     // -------
                     // /names
-                    // -------
+                    // -------  ***testé
                     else if (!strcmp(cli_packet.cmd.args[0], "names")) {
-                        srv_packet.type = 2;
-                        memset(srv_packet.big_message, 0, BIG_MESSAGE_SIZE);
+                        srv_packet.type = SRV_BIG_TXT;
+                        memset(srv_packet.bmsg.message, 0, BIG_MESSAGE_SIZE);
 
                         while (cur_con) {
                             if (!strcmp(cur_con->channel_id, my_con->channel_id)) {
-                                strcat(srv_packet.big_message, cur_con->id);
+                                strcat(srv_packet.bmsg.message, cur_con->id);
                                 if (cur_con->next)
-                                    strcat(srv_packet.big_message, ":");
+                                    strcat(srv_packet.bmsg.message, ":");
                             }
+                            cur_con = cur_con->next;
                         }
                         send_srv_packet(my_con, &srv_packet);
                     }
 
                     // ------
                     // /list
-                    // ------
+                    // ------ ***testé
                     else if (!strcmp(cli_packet.cmd.args[0], "list")) {
                         cur_chan = first_chan;
 
-                        srv_packet.type = 2;
-                        memset(srv_packet.big_message, 0, BIG_MESSAGE_SIZE);
+                        srv_packet.type = SRV_BIG_TXT;
+                        memset(srv_packet.bmsg.message, 0, BIG_MESSAGE_SIZE);
 
                         while (cur_chan) {
                             // contenu de la forme:
@@ -203,10 +196,10 @@ void* handle_client_communication(void *argss)
                             //      channel1\Nous sommes dans le canal 1
                             //      channel2\Le canal deux (2), c'est le meilleur!
                             //
-                            strcat(srv_packet.big_message, cur_chan->id);
-                            strcat(srv_packet.big_message, "\\");
-                            strcat(srv_packet.big_message, cur_chan->topic);
-                            strcat(srv_packet.big_message, "\n");
+                            strcat(srv_packet.bmsg.message, cur_chan->id);
+                            strcat(srv_packet.bmsg.message, "\\");
+                            strcat(srv_packet.bmsg.message, cur_chan->topic);
+                            strcat(srv_packet.bmsg.message, "\n");
                             
                             cur_chan = cur_chan->next;
                         }
@@ -215,22 +208,18 @@ void* handle_client_communication(void *argss)
 
                     // -------------------
                     // /join <nom_channel>
-                    // -------------------
+                    // ------------------- ***testé
                     else if (!strcmp(cli_packet.cmd.args[0], "join")) {
                         wait_for_connection(my_con);
+                        add_channel(cli_packet.cmd.args[1], "");
                         strcpy(my_con->channel_id, cli_packet.cmd.args[1]);
                         sem_post(my_con->sem);
                     }
 
-                    // ---------------------------------------------
+                    // -----------
                     // /disconnect 
-                    //
-                    // TODO: se déconnecter avec un paquet cmd ou
-                    // avec un simple flag client_packet.type = -1 ?
-                    // ---------------------------------------------
+                    // -----------
                     else if (!strcmp(cli_packet.cmd.args[0], "disconnect")) {
-                        srv_packet = (server_packet) {.type = 0};
-                        send_srv_packet(my_con, &srv_packet);
                         close_connection(my_con, args);
                         return NULL;
                     }
@@ -242,7 +231,8 @@ void* handle_client_communication(void *argss)
         }
     }
 
-    close_connection(my_con, args);
+    if (!my_con)
+        close_connection(my_con, args);
     return NULL;
 }
 
@@ -329,6 +319,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    // ajout du canal par défaut
+    add_channel(DEFAULT_CHANNEL_ID, DEFAULT_CHANNEL_TOPIC);
     receive_connections();
     return 0;
 }

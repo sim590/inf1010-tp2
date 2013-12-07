@@ -1,14 +1,39 @@
 #include <client.h>
 
 char* server_ip;
+int server_port = DEFAULT_SERVER_PORT;
 int des;
 struct sockaddr_in s_in;
 WINDOW *displayWin;
 WINDOW *inputWin;
 int sock;
 
-int main(void)
+int get_options(int argc, char *argv[])
 {
+    int opt;
+    
+    static const struct option longopts[] = {
+        {"help" , no_argument       , 0 , 'h' },
+        {0      , 0                 , 0 ,  0  }
+    };
+
+    while ((opt = getopt_long(argc, argv, "h:", longopts, NULL)) != -1) {
+        switch (opt) {
+            case 'h':
+                printf("%s\n", HELP);
+                exit(EXIT_SUCCESS);
+            default:
+                fprintf(stderr, "%s\n", TRY_HELP);
+                return -1;
+        }
+    }
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    if(get_options(argc, argv))
+        exit(EXIT_FAILURE);
   
     initscr();
     start_color();
@@ -129,7 +154,7 @@ void connectToServer(char * str)
     }
 
     s_in.sin_family = AF_INET;
-    s_in.sin_port = htons(80);
+    s_in.sin_port = htons(server_port);
     inet_aton(ip_address, &s_in.sin_addr);
 
     if (connect(sock, &s_in, sizeof(s_in)) < 0) {

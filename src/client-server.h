@@ -21,6 +21,10 @@
 
 #define DEFAULT_SERVER_PORT 28000
 #define BIG_MESSAGE_SIZE 1024
+#define CLI_TXT 0
+#define CLI_CMD 2
+#define SRV_TXT 1
+#define SRV_BIG_TXT 2
 
 // --------------------------------------------------------------------------
 // DÉFINITION DE LA LISTE DES COMMANDES
@@ -89,26 +93,36 @@ typedef struct _connection_info {
     char id[32];
 } connection_info;
 
+typedef struct _text_msg {
+    unsigned int type;
+    char message[256];
+} text_msg;
+
+typedef struct _big_text_msg {
+    unsigned int type;
+    char message[BIG_MESSAGE_SIZE];
+} big_text_msg;
+
 typedef union {
     unsigned int type; /* in {-1,0,1,2}
                         * 0: message texte.
                         * 1: connexion
-                        * -1: déconnexion
+                        * 2: cmd
                         */
     client_cmd cmd;
     connection_info con_info;
-    char message[256];
+    text_msg msg;
 } client_packet;
 
 typedef union {
     unsigned int type;  /* in {-1,0,1}.
                          * -1: fail
                          *  0: succès de connexion ou de déconnexion
-                         *  1: message
+                         *  1: text_msg
                          *  2: big_message
                          */
-    char message[256];
-    char big_message[BIG_MESSAGE_SIZE];
+    text_msg msg;
+    big_text_msg bmsg;
 } server_packet;
 
 #endif /* end of include guard: CLIENT_SERVER_NN925AM4 */
