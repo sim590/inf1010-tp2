@@ -32,3 +32,5 @@ int sendMsgToServer(char*);
 int sendPktToServer(client_packet);
 
 int get_options(int,char*[]);
+
+void* listenToServer(void*);

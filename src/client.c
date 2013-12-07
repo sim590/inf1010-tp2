@@ -142,30 +142,39 @@ int getWord(char * str,char **nextWord, int position, int main)
 
 void connectToServer(char * str)
 { 
-    char * ip_address;
-    getWord(str,&ip_address,2,0);
+    char * ip_address,*second_arg;
+    int port;
+    getWord(str,&second_arg,2,0);
+
+    ip_address = strtok(second_arg,":");
+
+    if (strlen(ip_address) == strlen(second_arg)) {
+        port = server_port;
+    }
+    else {
+        second_arg += strlen(ip_address);
+        port = atoi(strtok(second_arg,"\0"));
+    }
 
     addText("Connecting to server...");
-    addText(ip_address);
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
         return;
     }
     
-    char * port;
-    getWord(str,&port,3,0);
-
     s_in.sin_family = AF_INET;
-    s_in.sin_port = htons(atoi(port));
-    //TODO: Utiliser server_port si aucun port spécifié
-    //s_in.sin_port = htons(server_port);
+    s_in.sin_port = htons(port);
     inet_aton(ip_address, &s_in.sin_addr);
 
     if (connect(sock,(struct sockaddr*)&s_in, sizeof(s_in)) < 0) {
         //TODO: gérer ça
         exit(EXIT_FAILURE);
     }
+
+    pthread_t tid;
+
+    pthread_create(&tid, NULL, listenToServer, NULL);
 
     client_packet pkt;
 
@@ -262,4 +271,18 @@ void addLine(char * line)
     winsertln(displayWin);
     waddstr(displayWin,line);
     wrefresh(displayWin);
+}
+
+void* listenToServer(void * args)
+{
+    while (1) {
+        server_packet srv_pkt;
+        
+        if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) < 0) {
+            //TODO: gérer l'erreur
+            return NULL;
+        }
+
+        addText(srv_pkt.msg.message);
+    }
 }
