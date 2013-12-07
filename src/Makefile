@@ -15,6 +15,8 @@ client: client.o BINDIR
 	gcc -o $(BINDIR)/$(PROGRAM)-client $(CLISERV_LINK) client.o -lncurses
 client.o: client.c client.h
 	$(CC) client.c
+mclient:
+	gcc -I. -g -o $(BINDIR)/$(PROGRAM)-mclient mclient.c
 server: server.o channels.o connections.o BINDIR
 	gcc -o $(BINDIR)/$(PROGRAM)-server $(CLISERV_LINK) server.o channels.o connections.o -lpthread
 server.o: server.c server.h

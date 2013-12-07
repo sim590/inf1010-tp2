@@ -42,7 +42,7 @@ int init_socket()
 
 void receive_connections()
 {
-    int clilen = sizeof(cli_addr), sockfd;
+    socklen_t clilen = sizeof(struct sockaddr), sockfd;
     pthread_t tid;
 
     if (listen(reception_socket_fd, 5)) {
@@ -315,6 +315,7 @@ int get_options(int argc, char *argv[])
                 return -1;
         }
     }
+    return 0;
 }
 
 int main(int argc, char *argv[])
