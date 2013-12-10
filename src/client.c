@@ -100,7 +100,12 @@ void inputCommand()
         }
         else if (!strcmp(command, "msg")) {
             char msg[MESSAGE_SIZE];
-            strcpy(msg,"[");
+            char *dest;
+            getWord(str, &dest, 2, 0);
+            if (!strcmp(dest, "-"))
+                strcpy(msg,"(tous)[");
+            else
+                sprintf(msg,"(à %s)[", dest);
             strcat(msg,my_id);
             strcat(msg,"]:");
             char* mainMsg;
@@ -336,7 +341,15 @@ void* listenToServer(void * args)
                     break;  
             case 1: 
                     if (strcmp(srv_pkt.msg.from,"")) {
-                        strcpy(msg, "[");
+                        if (srv_pkt.msg.priv)
+                            if (!strcmp(srv_pkt.msg.from, "-")) {
+                                strcpy(msg, "(tous)[");
+                            }
+                            else {
+                                strcpy(msg, "(privé)[");
+                            }
+                        else
+                            strcpy(msg, "[");
                         strcat(msg, srv_pkt.msg.from);
                         strcat(msg, "]:");
                         strcat(msg, srv_pkt.msg.message);

@@ -128,7 +128,13 @@ void* handle_client_communication(void *argss)
                 // --------------------------------------- ***testé
                 case CLI_TXT:
                     cur_con = first_con;
-                    srv_packet.type = SRV_TXT;
+                    srv_packet = (server_packet){
+                        .msg = {
+                        .type = SRV_TXT,
+                        .priv = 0
+                        }
+                    };
+
                     strcpy(srv_packet.msg.from, my_con->id);
                     strcpy(srv_packet.msg.message, cli_packet.msg.message);
 
@@ -149,7 +155,12 @@ void* handle_client_communication(void *argss)
                     // /msg <nom_utilisateur> <message>
                     // --------------------------------- ***testé
                     if (!strcmp(cli_packet.cmd.args[0], "msg")) {
-                        srv_packet.type = SRV_TXT;
+                    srv_packet = (server_packet){
+                        .msg = {
+                        .type = SRV_TXT,
+                        .priv = 1
+                        }
+                    };
                         strcpy(srv_packet.msg.from, my_con->id);
                         strcpy(srv_packet.msg.message, cli_packet.cmd.main_arg);
 

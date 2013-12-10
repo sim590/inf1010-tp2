@@ -95,6 +95,7 @@ typedef struct _connection_info {
 typedef struct _text_msg {
     unsigned int type;
     char from[32];
+    char priv;
     char message[MESSAGE_SIZE];
 } text_msg;
 
