@@ -20,7 +20,7 @@ int wait_for_connection(connection *con)
     if (!con || con->flagged_deleted)
         return -1;
     sem_wait(con->sem);
-    if (!con ) {
+    if (!con) {
         return -1;
     }
     else if (con->flagged_deleted) {
@@ -121,6 +121,12 @@ int remove_connection(char id[])
 
     // si un seul élément
     if (first_con == last_con && !strcmp(first_con->id, id)) {
+        printf("inf1010tp2-server: déconnexion d'un client [id=%s,ip=%u.%u.%u.%u]\n", first_con->id, 
+                        (first_con->addr.sin_addr.s_addr<<24)>>24,
+                        (first_con->addr.sin_addr.s_addr<<16)>>24,
+                        (first_con->addr.sin_addr.s_addr<<8)>>24,
+                         first_con->addr.sin_addr.s_addr>>24
+          );
         // on flag comme supprimé
         sem_wait(cons_sem);
         first_con->flagged_deleted = 1;
@@ -144,6 +150,14 @@ int remove_connection(char id[])
      */
     connection *con;
     if (!find_connection(id, &con)) {
+
+        printf("inf1010tp2-server: déconnexion d'un client [id=%s,ip=%u.%u.%u.%u]\n", con->id, 
+                        (con->addr.sin_addr.s_addr<<24)>>24,
+                        (con->addr.sin_addr.s_addr<<16)>>24,
+                        (con->addr.sin_addr.s_addr<<8)>>24,
+                         con->addr.sin_addr.s_addr>>24
+          );
+
         if (wait_for_connection(con))
             return 0;
         // au début
@@ -151,6 +165,8 @@ int remove_connection(char id[])
             wait_for_connection(con->next);
 
             con->next->prev = NULL;
+            first_con = con->next;
+
             sem_post(con->next->sem);
         }
         // à la fin
@@ -158,6 +174,8 @@ int remove_connection(char id[])
             wait_for_connection(con->prev);
 
             con->prev->next = NULL;
+            last_con = con->prev;
+
             sem_post(con->prev->sem);
         }
         else {
@@ -173,6 +191,8 @@ int remove_connection(char id[])
         sem_wait(con->sem);
         free(con->sem);
         free(con);
+
+
         return 0;
     }
     

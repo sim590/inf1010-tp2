@@ -281,6 +281,12 @@ int send_srv_packet(connection *con, server_packet *packet)
     return 0;
 }
 
+void handle_sig()
+{
+    close(reception_socket_fd);
+    exit(EXIT_SUCCESS);
+}
+
 int get_options(int argc, char *argv[])
 {
     int opt;
@@ -310,6 +316,8 @@ int get_options(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+    signal(SIGINT, handle_sig);
+    signal(SIGKILL, handle_sig);
     
     if(get_options(argc, argv))
         exit(EXIT_FAILURE);

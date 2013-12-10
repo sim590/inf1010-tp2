@@ -1,5 +1,7 @@
 #include <client.h>
 
+#define COMMAND_PROMPT "[~inf1010tp2-cli] "
+
 char* server_ip;
 int server_port = DEFAULT_SERVER_PORT;
 int des;
@@ -77,7 +79,7 @@ void inputCommand()
 
     wmove(inputWin,1,0);
     winsertln(inputWin);
-    waddstr(inputWin,"$");
+    waddstr(inputWin, COMMAND_PROMPT);
     wrefresh(inputWin);
     wgetstr(inputWin, str);
 
@@ -289,7 +291,8 @@ void addText(char * text)
             addLine(token);
         }
     } while (token && cur_len < len);
-    /*free(text_copy);*/ /*besoin de free ?*/ 
+
+    //free(text_copy); [>besoin de free ?<] 
 }
 
 void addLine(char * line)
