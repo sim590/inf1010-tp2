@@ -7,6 +7,7 @@ struct sockaddr_in s_in;
 WINDOW *displayWin, *inputWin;
 int sock;
 pthread_t tid;
+char * my_id;
 
 int get_options(int argc, char *argv[])
 {
@@ -40,11 +41,21 @@ int main(int argc, char *argv[])
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_CYAN, COLOR_BLACK);
     init_pair(3, COLOR_GREEN, COLOR_BLACK);
+    init_pair(4, COLOR_WHITE, COLOR_CYAN);
 
-    displayWin = create_newwin(LINES-1,COLS-1,0,0);
-    inputWin = create_newwin(1,COLS-1,LINES-1,0);
+    displayWin = create_newwin(LINES-2,COLS-1,0,0);
+    inputWin = create_newwin(2,COLS-1,LINES-2,0);
 
     wattron(displayWin, COLOR_PAIR(1));
+    char line[COLS];
+    int i =0;
+    while (i < COLS) {
+        line[i++] = ' ';
+    }
+    wattron(inputWin, COLOR_PAIR(4));
+    wmove(inputWin,0,0);
+    waddstr(inputWin,line);
+
     wattron(inputWin, COLOR_PAIR(2));
 
     inputCommand();
@@ -64,15 +75,12 @@ void inputCommand()
 {
     char * str = malloc(sizeof(char) * 255);
 
-    wmove(inputWin,0,0);
+    wmove(inputWin,1,0);
     winsertln(inputWin);
     waddstr(inputWin,"$");
     wrefresh(inputWin);
     wgetstr(inputWin, str);
 
-    wattron(displayWin, COLOR_PAIR(3));
-    addText(str);
-    wattron(displayWin, COLOR_PAIR(1));
 
     if (*str != '/') {
        sendMsgToServer(str);
@@ -89,6 +97,19 @@ void inputCommand()
             return;
         }
         else if (!strcmp(command, "msg")) {
+            char msg[BIG_MESSAGE_SIZE];
+            strcpy(msg,"[");
+            strcat(msg,my_id);
+            strcat(msg,"]:");
+            char* mainMsg;
+            getWord(str,&mainMsg,3,1);
+            strcat(msg,mainMsg);
+            free(mainMsg);
+
+            wattron(displayWin, COLOR_PAIR(3));
+            addText(msg);
+            wattron(displayWin, COLOR_PAIR(1));
+
             sendCmdToServer(str,2);
         }
         else if (!strcmp(command, "join")) {
@@ -182,10 +203,9 @@ void connectToServer(char * str)
 
     pkt.type = 1;
     
-    char * user_id;
-    getWord(str,&user_id,3,0);
+    getWord(str,&my_id,3,0);
 
-    strcpy(pkt.con_info.id, user_id);
+    strcpy(pkt.con_info.id, my_id);
 
     send(sock,(void*)&pkt, sizeof(pkt),0);(pkt);
 }
@@ -197,6 +217,15 @@ int sendMsgToServer(char * str)
     pkt.type = 0;
     pkt.msg.type = 0;
     strcpy(pkt.msg.message,str);
+
+    char msg[BIG_MESSAGE_SIZE];
+    strcpy(msg,"[");
+    strcat(msg,my_id);
+    strcat(msg,"]:");
+    strcat(msg,pkt.msg.message);
+    wattron(displayWin, COLOR_PAIR(3));
+    addText(msg);
+    wattron(displayWin, COLOR_PAIR(1));
 
     send(sock,(void*)&pkt, sizeof(pkt),0);(pkt);
 
@@ -247,26 +276,27 @@ void destroy_win(WINDOW *local_win)
 void addText(char * text)
 {
     char * text_copy = strdup(text);
-
+    int cur_len = 0;
+    int len = strlen(text_copy);
     char * token = NULL;
     
     do {
         token = strtok(text_copy, "\n");
 
         if (token) {
-            text_copy += strlen(token);
+            cur_len += strlen(token)+1;
+            text_copy += strlen(token)+1;
             addLine(token);
         }
-    } while (token);
-
-    /*free(text_copy);*/
+    } while (token && cur_len < len);
+    /*free(text_copy);*/ /*besoin de free ?*/ 
 }
 
 void addLine(char * line)
 {
     wmove(displayWin,0,0);
     wdeleteln(displayWin);
-    wmove(displayWin,LINES-2,0);
+    wmove(displayWin,LINES-3,0);
     winsertln(displayWin);
     waddstr(displayWin,line);
     wrefresh(displayWin);
@@ -277,15 +307,42 @@ void* listenToServer(void * args)
     int boucle = 1;
     do {
         server_packet srv_pkt;
-        
-        if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) <= 0) {
-            addText("Déconnexion...");
+        int n = recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0);
+        if (n < 0) {
+            addText("Erreur de communication avec le serveur.");
             return NULL;
         }
+        else if (n == 0) {
+            addText("Vous avez été déconnecté du server");
+            return NULL;
+        }
+        char msg[BIG_MESSAGE_SIZE];
+        strcpy(msg, "");
+        client_packet cli_pkt; 
         switch (srv_pkt.type) {
-            case 0: boucle--; break; /*TODO: 0: succès quelconque*/ 
-            case 1: addText(srv_pkt.msg.message); break;
-            case 2: addText(srv_pkt.msg.message); break;
+            case 0: boucle--;
+                    if (boucle == 0) { //Connection
+                        addText("Vous êtes connecté.");
+                        cli_pkt.type = 2;
+                        cli_pkt.cmd.argc = 1;
+                        strcpy(cli_pkt.cmd.args[0],"names");
+
+                        sendPktToServer(cli_pkt);
+
+                    }
+                    break;  
+            case 1: 
+                    if (strcmp(srv_pkt.msg.from,"")) {
+                        strcpy(msg, "[");
+                        strcat(msg, srv_pkt.msg.from);
+                        strcat(msg, "]:");
+                        strcat(msg, srv_pkt.msg.message);
+                    } else {
+                        strcpy(msg,"----------\n");
+                        strcat(msg, srv_pkt.msg.message);
+                        strcat(msg,"\n----------");
+                    }
+                    addText(msg); break;
             default: addText("Erreur de communication avec le serveur.");boucle--; break; /*Erreur quelconque..*/ 
         }
 
