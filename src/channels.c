@@ -27,8 +27,8 @@ int add_channel(char id[], char topic[])
 
     //construction du nouveau channel
     *new_chan = (channel) {.next = NULL, .prev = NULL};
-    strncpy(new_chan->id, id, 32);
-    strncpy(new_chan->topic, topic, 256);
+    strcpy(new_chan->id, id);
+    strcpy(new_chan->topic, topic);
 
     //si la liste est vide
     if (!first_chan && !last_chan) {

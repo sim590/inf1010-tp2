@@ -129,7 +129,9 @@ void* handle_client_communication(void *argss)
                 case CLI_TXT:
                     cur_con = first_con;
                     srv_packet.type = SRV_TXT;
+                    strcpy(srv_packet.msg.from, my_con->id);
                     strcpy(srv_packet.msg.message, cli_packet.msg.message);
+
                     while (cur_con) {
                         // send sur le socket du client cur.
                         if (cur_con != my_con && !strcmp(cur_con->channel_id, my_con->channel_id))
@@ -145,9 +147,10 @@ void* handle_client_communication(void *argss)
 
                     // ---------------------------------
                     // /msg <nom_utilisateur> <message>
-                    // --------------------------------- TODO: tester
+                    // --------------------------------- ***testé
                     if (!strcmp(cli_packet.cmd.args[0], "msg")) {
                         srv_packet.type = SRV_TXT;
+                        strcpy(srv_packet.msg.from, my_con->id);
                         strcpy(srv_packet.msg.message, cli_packet.cmd.main_arg);
 
                         // message à tous les clients connectés au serveur
@@ -167,14 +170,14 @@ void* handle_client_communication(void *argss)
                     // /names
                     // -------  ***testé
                     else if (!strcmp(cli_packet.cmd.args[0], "names")) {
-                        srv_packet.type = SRV_BIG_TXT;
-                        memset(srv_packet.bmsg.message, 0, BIG_MESSAGE_SIZE);
+                        srv_packet.type = SRV_TXT;
+                        memset(srv_packet.msg.message, 0, BIG_MESSAGE_SIZE);
 
                         while (cur_con) {
                             if (!strcmp(cur_con->channel_id, my_con->channel_id)) {
-                                strcat(srv_packet.bmsg.message, cur_con->id);
+                                strcat(srv_packet.msg.message, cur_con->id);
                                 if (cur_con->next)
-                                    strcat(srv_packet.bmsg.message, ":");
+                                    strcat(srv_packet.msg.message, ":");
                             }
                             cur_con = cur_con->next;
                         }
@@ -187,8 +190,8 @@ void* handle_client_communication(void *argss)
                     else if (!strcmp(cli_packet.cmd.args[0], "list")) {
                         cur_chan = first_chan;
 
-                        srv_packet.type = SRV_BIG_TXT;
-                        memset(srv_packet.bmsg.message, 0, BIG_MESSAGE_SIZE);
+                        srv_packet.type = SRV_TXT;
+                        memset(srv_packet.msg.message, 0, BIG_MESSAGE_SIZE);
 
                         while (cur_chan) {
                             // contenu de la forme:
@@ -196,10 +199,10 @@ void* handle_client_communication(void *argss)
                             //      channel1\Nous sommes dans le canal 1
                             //      channel2\Le canal deux (2), c'est le meilleur!
                             //
-                            strcat(srv_packet.bmsg.message, cur_chan->id);
-                            strcat(srv_packet.bmsg.message, "\\");
-                            strcat(srv_packet.bmsg.message, cur_chan->topic);
-                            strcat(srv_packet.bmsg.message, "\n");
+                            strcat(srv_packet.msg.message, cur_chan->id);
+                            strcat(srv_packet.msg.message, "\\");
+                            strcat(srv_packet.msg.message, cur_chan->topic);
+                            strcat(srv_packet.msg.message, "\n");
                             
                             cur_chan = cur_chan->next;
                         }
@@ -210,10 +213,17 @@ void* handle_client_communication(void *argss)
                     // /join <nom_channel>
                     // ------------------- ***testé
                     else if (!strcmp(cli_packet.cmd.args[0], "join")) {
+                        char topic[256];
+                        memset(topic, 0, 256);
+                        strcat(topic, my_con->id);
+                        strcat(topic, ": vient de créer le canal.");
+
                         wait_for_connection(my_con);
-                        add_channel(cli_packet.cmd.args[1], "");
                         strcpy(my_con->channel_id, cli_packet.cmd.args[1]);
                         sem_post(my_con->sem);
+
+                        /*TODO: gérer sémaphores channels*/
+                        add_channel(cli_packet.cmd.args[1],topic);
                     }
 
                     // -----------

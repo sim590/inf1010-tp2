@@ -14,6 +14,7 @@
 #define CHANNELS_S7PS9ZKO
 
 #include <common.h>
+#include <client-server.h>
 
 //----------------------------
 //----------------------------
@@ -23,6 +24,7 @@
 typedef struct _channel {
     char id[32];
     char topic[256];
+    sem_t sem;
     struct _channel *next;
     struct _channel *prev;
 } channel;

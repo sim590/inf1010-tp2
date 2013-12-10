@@ -176,7 +176,7 @@ int find_connection(char id[], connection **con)
     int equals = 0;
     connection *cur = first_con;
     while (cur) {
-        if (!strcmp(id, cur->channel_id)) {
+        if (!strcmp(id, cur->id)) {
             if (con)
                 *con = cur;
             return 0;

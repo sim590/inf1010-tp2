@@ -286,13 +286,16 @@ void* listenToServer(void * args)
         
         if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) <= 0) {
             //TODO: gérer l'erreur
+            // ==> Socket semble inutilisable.. on arrête l'écoute jusqu'à la
+            // prochaine reconnexion.
+            addText("Erreur de communication avec le serveur.");
             return NULL;
         }
         switch (srv_pkt.type) {
-            case 0: boucle--; break;
+            case 0: boucle--; break; /*TODO: 0: succès quelconque*/ 
             case 1: addText(srv_pkt.msg.message); break;
-            case 2: addText(srv_pkt.bmsg.message); break;
-            default: addText("Erreur de communication avec le serveur.");boucle--; break;
+            case 2: addText(srv_pkt.msg.message); break;
+            default: addText("Erreur de communication avec le serveur.");boucle--; break; /*Erreur quelconque..*/ 
         }
 
     } while (!boucle);

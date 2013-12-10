@@ -24,7 +24,6 @@
 #define CLI_TXT 0
 #define CLI_CMD 2
 #define SRV_TXT 1
-#define SRV_BIG_TXT 2
 
 // --------------------------------------------------------------------------
 // DÉFINITION DE LA LISTE DES COMMANDES
@@ -95,13 +94,9 @@ typedef struct _connection_info {
 
 typedef struct _text_msg {
     unsigned int type;
-    char message[256];
-} text_msg;
-
-typedef struct _big_text_msg {
-    unsigned int type;
+    char from[32];
     char message[BIG_MESSAGE_SIZE];
-} big_text_msg;
+} text_msg;
 
 typedef union {
     unsigned int type; /* in {-1,0,1,2}
@@ -117,12 +112,11 @@ typedef union {
 typedef union {
     unsigned int type;  /* in {-1,0,1}.
                          * -1: fail
-                         *  0: succès de connexion ou de déconnexion
+                         *  0: succès quelconque
                          *  1: text_msg
                          *  2: big_message
                          */
     text_msg msg;
-    big_text_msg bmsg;
 } server_packet;
 
 #endif /* end of include guard: CLIENT_SERVER_NN925AM4 */
