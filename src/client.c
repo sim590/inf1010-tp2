@@ -42,11 +42,21 @@ int main(int argc, char *argv[])
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_CYAN, COLOR_BLACK);
     init_pair(3, COLOR_GREEN, COLOR_BLACK);
+    init_pair(4, COLOR_WHITE, COLOR_CYAN);
 
-    displayWin = create_newwin(LINES-1,COLS-1,0,0);
-    inputWin = create_newwin(1,COLS-1,LINES-1,0);
+    displayWin = create_newwin(LINES-2,COLS-1,0,0);
+    inputWin = create_newwin(2,COLS-1,LINES-2,0);
 
     wattron(displayWin, COLOR_PAIR(1));
+    char line[COLS];
+    int i =0;
+    while (i < COLS) {
+        line[i++] = ' ';
+    }
+    wattron(inputWin, COLOR_PAIR(4));
+    wmove(inputWin,0,0);
+    waddstr(inputWin,line);
+
     wattron(inputWin, COLOR_PAIR(2));
 
     inputCommand();
@@ -66,7 +76,7 @@ void inputCommand()
 {
     char * str = malloc(sizeof(char) * 255);
 
-    wmove(inputWin,0,0);
+    wmove(inputWin,1,0);
     winsertln(inputWin);
     waddstr(inputWin,"$");
     wrefresh(inputWin);
@@ -293,7 +303,7 @@ void addLine(char * line)
 {
     wmove(displayWin,0,0);
     wdeleteln(displayWin);
-    wmove(displayWin,LINES-2,0);
+    wmove(displayWin,LINES-3,0);
     winsertln(displayWin);
     waddstr(displayWin,line);
     wrefresh(displayWin);
