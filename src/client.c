@@ -7,6 +7,7 @@ struct sockaddr_in s_in;
 WINDOW *displayWin;
 WINDOW *inputWin;
 int sock;
+pthread_t tid;
 
 int get_options(int argc, char *argv[])
 {
@@ -75,7 +76,7 @@ void inputCommand()
     wattron(displayWin, COLOR_PAIR(1));
 
     if (*str != '/') {
-       sendCmdToServer(str, 0);
+       sendMsgToServer(str);
     }
     else {
     
@@ -89,6 +90,9 @@ void inputCommand()
             return;
         }
         else if (!strcmp(command, "msg")) {
+            sendCmdToServer(str,2);
+        }
+        else if (!strcmp(command, "join")) {
             sendCmdToServer(str,2);
         }
         else {
@@ -144,6 +148,7 @@ void connectToServer(char * str)
 { 
     char * ip_address,*second_arg;
     int port;
+    struct hostent * hostinfo;
     getWord(str,&second_arg,2,0);
 
     ip_address = strtok(second_arg,":");
@@ -156,7 +161,6 @@ void connectToServer(char * str)
         port = atoi(strtok(second_arg,"\0"));
     }
 
-    addText("Connecting to server...");
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
@@ -165,14 +169,13 @@ void connectToServer(char * str)
     
     s_in.sin_family = AF_INET;
     s_in.sin_port = htons(port);
-    inet_aton(ip_address, &s_in.sin_addr);
+    s_in.sin_addr.s_addr = inet_addr(ip_address);
 
     if (connect(sock,(struct sockaddr*)&s_in, sizeof(s_in)) < 0) {
         //TODO: gérer ça
         exit(EXIT_FAILURE);
     }
 
-    pthread_t tid;
 
     pthread_create(&tid, NULL, listenToServer, NULL);
 
@@ -181,9 +184,11 @@ void connectToServer(char * str)
     pkt.type = 1;
     
     char * user_id;
-    getWord(str,&user_id,4,0);
+    getWord(str,&user_id,3,0);
 
     strcpy(pkt.con_info.id, user_id);
+
+    sendPktToServer(pkt);
 }
 
 int sendMsgToServer(char * str)
@@ -275,14 +280,20 @@ void addLine(char * line)
 
 void* listenToServer(void * args)
 {
-    while (1) {
+    int boucle = 1;
+    do {
         server_packet srv_pkt;
         
         if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) < 0) {
             //TODO: gérer l'erreur
             return NULL;
         }
+        switch (srv_pkt.type) {
+            case 0: boucle--; break;
+            case 1: addText(srv_pkt.msg.message); break;
+            case 2: addText(srv_pkt.bmsg.message); break;
+            default: addText("Erreur de communication avec le serveur.");boucle--; break;
+        }
 
-        addText(srv_pkt.msg.message);
-    }
+    } while (!boucle);
 }
