@@ -65,10 +65,10 @@ void receive_connections()
         
         if (pthread_create(&tid, NULL, handle_client_communication, args))
             fprintf(stderr, "Impossible de créer un thread de connexion pour le client %u.%u.%u.%u...\n", 
-                    cli_addr.sin_addr.s_addr>>24,
-                    (cli_addr.sin_addr.s_addr<<8)>>24,
+                    (cli_addr.sin_addr.s_addr<<24)>>24,
                     (cli_addr.sin_addr.s_addr<<16)>>24,
-                    (cli_addr.sin_addr.s_addr<<24)>>24
+                    (cli_addr.sin_addr.s_addr<<8)>>24,
+                    cli_addr.sin_addr.s_addr>>24
              );
     }
 }
@@ -171,7 +171,7 @@ void* handle_client_communication(void *argss)
                     // -------  ***testé
                     else if (!strcmp(cli_packet.cmd.args[0], "names")) {
                         srv_packet.type = SRV_TXT;
-                        memset(srv_packet.msg.message, 0, BIG_MESSAGE_SIZE);
+                        memset(srv_packet.msg.message, 0, MESSAGE_SIZE);
 
                         while (cur_con) {
                             if (!strcmp(cur_con->channel_id, my_con->channel_id)) {
@@ -191,7 +191,7 @@ void* handle_client_communication(void *argss)
                         cur_chan = first_chan;
 
                         srv_packet.type = SRV_TXT;
-                        memset(srv_packet.msg.message, 0, BIG_MESSAGE_SIZE);
+                        memset(srv_packet.msg.message, 0, MESSAGE_SIZE);
 
                         while (cur_chan) {
                             // contenu de la forme:

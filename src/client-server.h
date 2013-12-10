@@ -20,7 +20,7 @@
 
 
 #define DEFAULT_SERVER_PORT 28000
-#define BIG_MESSAGE_SIZE 1024
+#define MESSAGE_SIZE 1024
 #define CLI_TXT 0
 #define CLI_CMD 2
 #define SRV_TXT 1
@@ -95,7 +95,7 @@ typedef struct _connection_info {
 typedef struct _text_msg {
     unsigned int type;
     char from[32];
-    char message[BIG_MESSAGE_SIZE];
+    char message[MESSAGE_SIZE];
 } text_msg;
 
 typedef union {
@@ -114,7 +114,6 @@ typedef union {
                          * -1: fail
                          *  0: succès quelconque
                          *  1: text_msg
-                         *  2: big_message
                          */
     text_msg msg;
 } server_packet;

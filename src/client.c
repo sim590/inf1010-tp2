@@ -4,8 +4,7 @@ char* server_ip;
 int server_port = DEFAULT_SERVER_PORT;
 int des;
 struct sockaddr_in s_in;
-WINDOW *displayWin;
-WINDOW *inputWin;
+WINDOW *displayWin, *inputWin;
 int sock;
 pthread_t tid;
 
@@ -188,7 +187,7 @@ void connectToServer(char * str)
 
     strcpy(pkt.con_info.id, user_id);
 
-    sendPktToServer(pkt);
+    send(sock,(void*)&pkt, sizeof(pkt),0);(pkt);
 }
 
 int sendMsgToServer(char * str)
@@ -199,7 +198,7 @@ int sendMsgToServer(char * str)
     pkt.msg.type = 0;
     strcpy(pkt.msg.message,str);
 
-    sendPktToServer(pkt);
+    send(sock,(void*)&pkt, sizeof(pkt),0);(pkt);
 
     return 0;
 }
@@ -210,7 +209,6 @@ int sendCmdToServer(char * str, int argc)
     client_packet pkt;
 
     pkt.cmd.argc = argc;
-    pkt.type = 2;
     pkt.cmd.type = 2;
 
     char * arg;
@@ -224,17 +222,11 @@ int sendCmdToServer(char * str, int argc)
     
     strcpy(pkt.cmd.main_arg,arg);
 
-    sendPktToServer(pkt);
+    send(sock,(void*)&pkt, sizeof(pkt),0);(pkt);
 
     return 0;
 }
 
-int sendPktToServer(client_packet pkt)
-{
-    send(sock,(void*)&pkt, sizeof(pkt),0);
-
-    return 0;
-}
 
 WINDOW *create_newwin(int height, int width, int starty, int startx)
 {  
@@ -266,6 +258,8 @@ void addText(char * text)
             addLine(token);
         }
     } while (token);
+
+    /*free(text_copy);*/
 }
 
 void addLine(char * line)
@@ -285,10 +279,7 @@ void* listenToServer(void * args)
         server_packet srv_pkt;
         
         if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) <= 0) {
-            //TODO: gérer l'erreur
-            // ==> Socket semble inutilisable.. on arrête l'écoute jusqu'à la
-            // prochaine reconnexion.
-            addText("Erreur de communication avec le serveur.");
+            addText("Déconnexion...");
             return NULL;
         }
         switch (srv_pkt.type) {

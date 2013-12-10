@@ -57,6 +57,13 @@ connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , pthr
     strcpy(new_con->id, id);
     strcpy(new_con->channel_id,  DEFAULT_CHANNEL_ID);
 
+    printf("inf1010tp2-server: nouvelle connexion [id=%s,ip=%u.%u.%u.%u]\n", id, 
+                    (addr.sin_addr.s_addr<<24)>>24,
+                    (addr.sin_addr.s_addr<<16)>>24,
+                    (addr.sin_addr.s_addr<<8)>>24,
+                    addr.sin_addr.s_addr>>24
+      );
+
     // liste vide.
     sem_wait(cons_sem);
     if (!first_con && !last_con) {
@@ -151,7 +158,7 @@ int remove_connection(char id[])
             wait_for_connection(con->prev);
 
             con->prev->next = NULL;
-            sem_post(con->next->sem);
+            sem_post(con->prev->sem);
         }
         else {
             wait_for_connection(con->prev);
