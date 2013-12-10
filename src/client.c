@@ -284,7 +284,7 @@ void* listenToServer(void * args)
     do {
         server_packet srv_pkt;
         
-        if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) < 0) {
+        if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) <= 0) {
             //TODO: gérer l'erreur
             return NULL;
         }
