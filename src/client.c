@@ -274,17 +274,19 @@ void destroy_win(WINDOW *local_win)
 void addText(char * text)
 {
     char * text_copy = strdup(text);
-
+    int cur_len = 0;
+    int len = strlen(text_copy);
     char * token = NULL;
     
     do {
         token = strtok(text_copy, "\n");
 
         if (token) {
-            text_copy += strlen(token);
+            cur_len += strlen(token)+1;
+            text_copy += strlen(token)+1;
             addLine(token);
         }
-    } while (token);
+    } while (token && cur_len < len);
 }
 
 void addLine(char * line)
@@ -334,8 +336,12 @@ void* listenToServer(void * args)
                         strcpy(msg, "[");
                         strcat(msg, srv_pkt.msg.from);
                         strcat(msg, "]:");
+                        strcat(msg, srv_pkt.msg.message);
+                    } else {
+                        strcpy(msg,"----------\n");
+                        strcat(msg, srv_pkt.msg.message);
+                        strcat(msg,"\n----------");
                     }
-                    strcat(msg, srv_pkt.msg.message);
                     addText(msg); break;
             default: addText("Erreur de communication avec le serveur.");boucle--; break; /*Erreur quelconque..*/ 
         }
