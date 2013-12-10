@@ -78,6 +78,7 @@ connection* add_connection(char id[], int sockfd, struct sockaddr_in addr , pthr
         if (last == last_con) {
             last->next = new_con;
             new_con->prev = last;
+            last_con = new_con;
 
             sem_post(last->sem);
             return new_con;
