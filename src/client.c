@@ -97,7 +97,7 @@ void inputCommand()
             return;
         }
         else if (!strcmp(command, "msg")) {
-            char msg[BIG_MESSAGE_SIZE];
+            char msg[MESSAGE_SIZE];
             strcpy(msg,"[");
             strcat(msg,my_id);
             strcat(msg,"]:");
@@ -218,7 +218,7 @@ int sendMsgToServer(char * str)
     pkt.msg.type = 0;
     strcpy(pkt.msg.message,str);
 
-    char msg[BIG_MESSAGE_SIZE];
+    char msg[MESSAGE_SIZE];
     strcpy(msg,"[");
     strcat(msg,my_id);
     strcat(msg,"]:");
@@ -316,7 +316,7 @@ void* listenToServer(void * args)
             addText("Vous avez été déconnecté du server");
             return NULL;
         }
-        char msg[BIG_MESSAGE_SIZE];
+        char msg[MESSAGE_SIZE];
         strcpy(msg, "");
         client_packet cli_pkt; 
         switch (srv_pkt.type) {
@@ -327,7 +327,7 @@ void* listenToServer(void * args)
                         cli_pkt.cmd.argc = 1;
                         strcpy(cli_pkt.cmd.args[0],"names");
 
-                        sendPktToServer(cli_pkt);
+                        send(sock,(void*)&cli_pkt, sizeof(cli_pkt),0);(cli_pkt);
 
                     }
                     break;  
