@@ -245,10 +245,6 @@ void close_connection(connection *con, hcc_args *args)
 
 int recv_cli_packet(connection *con, client_packet *packet)
 {
-    // La connexion est soit supprimée ou en voie de l'être.
-    if (wait_for_connection(con))
-        return -1;
-
     int n=0, nattempts=0;
 
     while (n<=0) {
@@ -258,16 +254,11 @@ int recv_cli_packet(connection *con, client_packet *packet)
             return -1;
         }
     }
-    sem_post(con->sem);
     return 0;
 }
 
 int send_srv_packet(connection *con, server_packet *packet)
 {
-    // La connexion est soit supprimée ou en voie de l'être.
-    if (wait_for_connection(con))
-        return -1;
-
     int n=0, nattempts=0;
 
     while (n<=0) {
@@ -277,7 +268,6 @@ int send_srv_packet(connection *con, server_packet *packet)
             return -1;
         }
     }
-    sem_post(con->sem);
     return 0;
 }
 
