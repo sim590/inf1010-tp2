@@ -8,6 +8,7 @@ WINDOW *displayWin;
 WINDOW *inputWin;
 int sock;
 pthread_t tid;
+char * my_id;
 
 int get_options(int argc, char *argv[])
 {
@@ -71,9 +72,6 @@ void inputCommand()
     wrefresh(inputWin);
     wgetstr(inputWin, str);
 
-    wattron(displayWin, COLOR_PAIR(3));
-    addText(str);
-    wattron(displayWin, COLOR_PAIR(1));
 
     if (*str != '/') {
        sendMsgToServer(str);
@@ -90,6 +88,19 @@ void inputCommand()
             return;
         }
         else if (!strcmp(command, "msg")) {
+            char msg[BIG_MESSAGE_SIZE];
+            strcpy(msg,"[");
+            strcat(msg,my_id);
+            strcat(msg,"]:");
+            char* mainMsg;
+            getWord(str,&mainMsg,3,1);
+            strcat(msg,mainMsg);
+            free(mainMsg);
+
+            wattron(displayWin, COLOR_PAIR(3));
+            addText(msg);
+            wattron(displayWin, COLOR_PAIR(1));
+
             sendCmdToServer(str,2);
         }
         else if (!strcmp(command, "join")) {
@@ -183,10 +194,9 @@ void connectToServer(char * str)
 
     pkt.type = 1;
     
-    char * user_id;
-    getWord(str,&user_id,3,0);
+    getWord(str,&my_id,3,0);
 
-    strcpy(pkt.con_info.id, user_id);
+    strcpy(pkt.con_info.id, my_id);
 
     sendPktToServer(pkt);
 }
@@ -198,6 +208,15 @@ int sendMsgToServer(char * str)
     pkt.type = 0;
     pkt.msg.type = 0;
     strcpy(pkt.msg.message,str);
+
+    char msg[BIG_MESSAGE_SIZE];
+    strcpy(msg,"[");
+    strcat(msg,my_id);
+    strcat(msg,"]:");
+    strcat(msg,pkt.msg.message);
+    wattron(displayWin, COLOR_PAIR(3));
+    addText(msg);
+    wattron(displayWin, COLOR_PAIR(1));
 
     sendPktToServer(pkt);
 
@@ -283,18 +302,41 @@ void* listenToServer(void * args)
     int boucle = 1;
     do {
         server_packet srv_pkt;
-        
-        if (recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0) <= 0) {
+        int n = recv(sock,(void*)&srv_pkt, sizeof(srv_pkt),0);
+        if (n < 0) {
             //TODO: gérer l'erreur
             // ==> Socket semble inutilisable.. on arrête l'écoute jusqu'à la
             // prochaine reconnexion.
             addText("Erreur de communication avec le serveur.");
             return NULL;
         }
+        else if (n == 0) {
+            addText("Vous avez été déconnecté du server");
+            return NULL;
+        }
+        char msg[BIG_MESSAGE_SIZE];
+        strcpy(msg, "");
+        client_packet cli_pkt; 
         switch (srv_pkt.type) {
-            case 0: boucle--; break; /*TODO: 0: succès quelconque*/ 
-            case 1: addText(srv_pkt.msg.message); break;
-            case 2: addText(srv_pkt.msg.message); break;
+            case 0: boucle--;
+                    if (boucle == 0) { //Connection
+                        addText("Vous êtes connecté.");
+                        cli_pkt.type = 2;
+                        cli_pkt.cmd.argc = 1;
+                        strcpy(cli_pkt.cmd.args[0],"names");
+
+                        sendPktToServer(cli_pkt);
+
+                    }
+                    break;  
+            case 1: 
+                    if (strcmp(srv_pkt.msg.from,"")) {
+                        strcpy(msg, "[");
+                        strcat(msg, srv_pkt.msg.from);
+                        strcat(msg, "]:");
+                    }
+                    strcat(msg, srv_pkt.msg.message);
+                    addText(msg); break;
             default: addText("Erreur de communication avec le serveur.");boucle--; break; /*Erreur quelconque..*/ 
         }
 
