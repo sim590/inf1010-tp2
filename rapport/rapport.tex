@@ -87,7 +87,7 @@
             \textsc{\huge \bfseries Travail Pratique 2}\\
                                     INF1010\\[0.4cm]
             \noindent\rule{13cm}{1pt}\\[5cm]
-            
+
             % Auteurs
             \begin{minipage}{0.4\textwidth}
                 \begin{flushleft}
@@ -103,7 +103,7 @@
                     \vspace{\parskip}
                 \end{flushright}
             \end{minipage}
-    
+
             % On va au bas de la page
             \vfill
             {\large Université du Québec à Trois-Rivières\\ \today}
@@ -115,15 +115,15 @@
 
     \tableofcontents
     \newpage
-    
+
     \pagenumbering{arabic}
     \setcounter{page}{1}
 
     \section{Introduction} % (fold)
     \label{sec:intro}
         La pile {\tt TCP/IP} permet une abstraction de la gestion de communication sur un réseau
-        d'ordinateur. Ce travail permettera de démontrer la compréhension chez l'étudiant des outils
-        de développement d'applications communicant sur le réseau.
+        d'ordinateur. Ce travail démontrera la compréhension chez l'étudiant des outils de
+        développement d'applications communiquant sur le réseau.
 
         \subsection{Objectifs et buts} % (fold)
         \label{sub:obj-buts}
@@ -139,7 +139,7 @@
                         \item connexion et déconnexion;
                         \item liste des clients connectés;
                         \item envoie de message à un client, un sous-ensemble de la totalité et la
-                            totalité;
+                            totalité.
                     \end{itemize}
             \end{itemize}
         % subsection obj_buts (end)
@@ -147,106 +147,245 @@
 
     \section{Méthodologie de conception} % (fold)
     \label{sec:method-concept}
+        Le système pour lequel l'équipe opté suit le modèle standard {\tt IRC} avec canaux. Par
+        conséquent, les clients se connectant au serveur ne communiquent pas nécessairement tous
+        ensemble. Afin de communiquer directement, il est nécessaire pour chaque client de se
+        trouver le même canal. Cependant, les clients sont munis de commandes spéciales leur
+        permettant de reoindre des clients ne se trouvant pas dans leur canal.
+
 
         % conception client-serveur
         \subsection{Échange client/serveur} % (fold)
-        \label{sub:echange client/serveur}
+        \label{sub:echange-client-serveur}
             Afin de communiquer de façon uniforme le client et le serveur ont étés prévu pour
-            échanger des structures encapsulant l'information. Ces structures comprennent entre
-            autres 
+            échanger des structures encapsulant l'information. Ces structures comprennent les
+            informations de communication (destinataire, destinateur, message), les commandes
+            transmises au serveur, etc. De plus, différentes constantes communes aux client et
+            serveur sont nécessaires:
+            \lstinputlisting[firstline=22, lastline=26, caption=Constantes {\tt client-server.h}]{../src/client-server.h}
+            Comme on peut le voir, le port par défaut de communication est spécifié dans le code
+            même du programme au moyen d'une instruction au compilateur. De plus, on a les
+            constantes {\tt CLI\_TXT}, {\tt CLI\_CMD} et {\tt SRV\_TXT} permettant une abstraction
+            des types de paquets d'échange.
+
+            \subsubsection{Client $\rightarrow$ serveur} % (fold)
+            \label{ssub:client-serveur}
+                Lorsque le client veut envoyer une requête au serveur, il prépare un paquet {\tt
+                client\_packet}:
+                \lstset{language=c}
+                \lstinputlisting[firstline=102, lastline=111, caption=Structure {\tt client\_packet}, ]{../src/client-server.h}
+                Le type {\tt union} est utilisé afin
+                d'offrir un aspect modulaire à la structure de communication entre le client et le
+                serveur. Chacun des champs {\tt cmd}, {\tt con\_info} et {\tt msg} partagent le même
+                espace mémoire. Le champ {\tt type} permet au serveur de savoir quel champ
+                considérer. Le tableau suivant fait la bijection entre les types et la structures:
+
+                \begin{table}[H]
+                    \centering
+                    \begin{tabular}{|c|l|}
+                        \hline {\bf Type}&{\bf Interprétation}\\
+                        \hline 0&{\tt cli\_text\_msg}\\
+                        \hline 1&{\tt connection\_info}\\
+                        \hline 2&{\tt client\_cmd}\\
+                        \hline
+                    \end{tabular}
+                    \caption{Types paquets client $\rightarrow$ serveur.}
+                \end{table}
+                Ci-bas les différentes structures mentionnées plus haut:
+                \lstinputlisting[firstline=79, lastline=84, caption=Structure {\tt client\_cmd}]{../src/client-server.h}
+                La structure {\tt client\_cmd} comprend les champs suivants:
+                \begin{itemize}
+                    \item {\tt type}: Le type de structure (devrait toujours être 2);
+                    \item {\tt argc}: Le nombre d'arguments que contient le tableau {\tt args};
+                    \item {\tt args}: {\tt args[0]} est la commande elle-même et le reste des
+                        éléments du tableau sont les arguemnts à la commande;
+                    \item {\tt main\_arg}: Le dernier argument de la commande (souvent le plus
+                        long).
+                \end{itemize}
+                Par exemple, la commande {\tt /msg simon Hey! Comment vas-tu ?} serait stockée de la façon suivante:
+                \begin{itemize}
+                    \item {\tt type = 2};
+                    \item {\tt argc = 2};
+                    \item {\tt args[0] = "msg"};
+                    \item {\tt args[1] = "simon"};
+                    \item {\tt main\_arg = "Hey! Comment vas-tu ?"}.
+                \end{itemize}
+
+                \lstinputlisting[firstline=90, lastline=93, caption=Structure {\tt connection\_info} ]{../src/client-server.h}
+                Cette structure est la première à être envoyée par le client après la connexion {\tt
+                TCP}. C'est l'envoie de l'identifiant du client qui sera stocké par le serveur dans
+                la table de connexion. Elle comprend les champs suivants:
+                \begin{itemize}
+                    \item {\tt type}: Le type de structure (devrait toujours être 1);
+                    \item {\tt id}: L'identifiant du client.
+                \end{itemize}
+                Lorsque {\tt Frédéric} se connecterait au serveur, son client enverrait le paquet
+                {\tt connection\_info} avec les champs initialisés de la sorte:
+                \begin{itemize}
+                    \item {\tt type = 1};
+                    \item {\tt id = "Frédéric"}.
+                \end{itemize}
+
+                \lstinputlisting[firstline=95, lastline=98, caption=Structure {\tt cli\_text\_msg} ]{../src/client-server.h}
+                C'est la structure signifiant l'envoie d'un message dans le canal du destinateur.
+                Les champs de la structures sont:
+                \begin{itemize}
+                    \item {\tt type}: Le type de structure (devrait toujours être 0);
+                    \item {\tt message}: Le message à envoyer.
+                \end{itemize}
+            % subsubsection client-serveur (end)
+
+            \subsubsection{Serveur $\rightarrow$ client} % (fold)
+            \label{ssub:serveur-client}
+                Lorsque le serveur veut répondre au client, il construit un paquet {\tt
+                server\_packet}:
+                \lstinputlisting[firstline=118, lastline=125, caption=Structure {\tt server\_packet}]{../src/client-server.h}
+                Comme pour la structure {\tt client\_packet}, l'union permet la
+                modularité\footnote{Pour l'élaboration du travail, pas plus d'un paquet n'a été
+                nécessaire du côté serveur. L'aspect modulaire a toutefois été implémenté pour une
+                question de symétrie et besoins éventuels.} des structures venant du serveur. Les
+                différents types de paquets sont énumérés dans le tableau suivant:
+                \begin{table}[H]
+                    \centering
+                    \begin{tabular}{|c|l|}
+                        \hline {\bf Type}&{\bf Interprétation}\\
+                        \hline -1& Échec de la transaction\\
+                        \hline 0&Succès de la transaction\\
+                        \hline 1&{\tt srv\_text\_msg}\\
+                        \hline
+                    \end{tabular}
+                    \caption{Types de paquets serveur $\rightarrow$ client.}
+                \end{table}
+                Lorsque le client fait une requête au serveur, celui-ci lui répondra avec un paquet
+                du type -1 si la transaction a échoué, 0 si la transaction est un succès et que le
+                client attent une simple confirmation, et 1 si c'est une réponse comportant du
+                texte. La structure {\tt srv\_text\_msg} est listé ci-bas:
+                \lstinputlisting[firstline=100, lastline=105, caption=Structure {\tt srv\_text\_msg}]{../src/client-server.h}
+                Le serveur utilise cette structure afin d'envoyer aux clients concernés les messages
+                appropriés. Les champs sont les suivants:
+                \begin{itemize}
+                    \item {\tt from}: Indique l'identifiant du client destinateur;
+                    \item {\tt priv}: Une variable booléenne spécifiant si le message est privé ou
+                        non;
+                    \item {\tt message}: Le message en question.
+                \end{itemize}
+                
+                Par exemple, si les clients simon, frédéric, romain et boucif sont connectés au même
+                serveur selon la configuration suivante:
+                \begin{table}[H]
+                    \centering
+                    \begin{tabular}{|c|l|}
+                        \hline {\bf Client}&{\bf Canal}\\
+                        \hline simon& patate\\
+                        \hline frédéric&patate\\
+                        \hline romain&uqtr\\
+                        \hline boucif&uqtr\\
+                        \hline
+                    \end{tabular}
+                \end{table}
+                Le client simon pourra alors parler directement au client frédéric, mais pas à
+                romain et boucif. La même chose pour ces deux derniers. Si simon envoie un message à
+                boucif de la façon suivante: {\tt /msg boucif Bonjour !}, ce dernier recevra un
+                paquet conteant les champs initialisés de la façon suivante:
+                \begin{itemize}
+                    \item {\tt from = "simon"};
+                    \item {\tt priv = 1};
+                    \item {\tt message = "Bonjour !"}.
+                \end{itemize}
+            % subsubsection serveur-client (end)
         % subsection echange client/serveur (end)
 
         \subsection{Client} % (fold)
         \label{sub:client}
-%- msg::
-    %description: Envoie un message à l'utilisateur spécifié.
-    %synopsis: /msg <nom_utilisateur> <message>
-     %- nom_utilisateur: Le nom d'utilisateur de la personne à qui envoyer le
-                        %message. Si le nom d'utilisateur est "-", envoyer à tous
-                        %les clients connectés.
-     %- message: Le message à envoyer.
+            %- msg::
+                %description: Envoie un message à l'utilisateur spécifié.
+                %synopsis: /msg <nom_utilisateur> <message>
+                 %- nom_utilisateur: Le nom d'utilisateur de la personne à qui envoyer le
+                                    %message. Si le nom d'utilisateur est "-", envoyer à tous
+                                    %les clients connectés.
+                 %- message: Le message à envoyer.
 
-%- names::
-    %synopsis: /names
-    %description: Requête de la liste des clients connectés dans le canal.
+            %- names::
+                %synopsis: /names
+                %description: Requête de la liste des clients connectés dans le canal.
 
-    %Affichage à l'écran (suggestion):
+                %Affichage à l'écran (suggestion):
 
-    %Clients dans votre canal:
-    %-------------------------
-    %[simon] [fred] [patate_poel] ...
-    %[mathieu] [simon2] [balbal] ...
-    %...
+                %Clients dans votre canal:
+                %-------------------------
+                %[simon] [fred] [patate_poel] ...
+                %[mathieu] [simon2] [balbal] ...
+                %...
 
-%- list::
-    %description: Requête de la liste de canaux disponibles.
-    %synopsis: /list
+            %- list::
+                %description: Requête de la liste de canaux disponibles.
+                %synopsis: /list
 
-    %Affichage à l'écran (suggestion):
+                %Affichage à l'écran (suggestion):
 
-    %Canaux ouverts sur le serveur:
-    %------------------------------
-    %[<nom_canal>]: <topic>
-    %[<nom_canal>]: <topic>
-    %[<nom_canal>]: <topic>
-    %...
+                %Canaux ouverts sur le serveur:
+                %------------------------------
+                %[<nom_canal>]: <topic>
+                %[<nom_canal>]: <topic>
+                %[<nom_canal>]: <topic>
+                %...
 
-%- topic::
-    %description: Requête du topic du canal.
-    %synopsis: /topic
+            %- topic::
+                %description: Requête du topic du canal.
+                %synopsis: /topic
 
-%- connect::
-    %description: Connecte le client au serveur spécifié.
-    %synopsis: /connect <nome_hôte>
-     %- nome_hôte: Le nom d'ĥôte du serveur auquel se connecter.
+            %- connect::
+                %description: Connecte le client au serveur spécifié.
+                %synopsis: /connect <nome_hôte>
+                 %- nome_hôte: Le nom d'ĥôte du serveur auquel se connecter.
 
-%- join::
-    %description: Change le canal dans lequel le client clavarde.
-    %synopsis: /join <nom_canal>
-     %- nom_canal: Le nom du canal auquel se joindre.
+            %- join::
+                %description: Change le canal dans lequel le client clavarde.
+                %synopsis: /join <nom_canal>
+                 %- nom_canal: Le nom du canal auquel se joindre.
 
-%- disconnect::
-    %description: Déconnecte le client du serveur.
-    %synopsis: /disconnect
+            %- disconnect::
+                %description: Déconnecte le client du serveur.
+                %synopsis: /disconnect
 
-%- quit::
-    %description: Ferme le programme.
-    %synopsis: /quit
+            %- quit::
+                %description: Ferme le programme.
+                %synopsis: /quit
 
-    %C'est la combinaison d'un /disconnect avec la fermeture du programme. Par
-    %conséquent, le serveur s'attendra à reçevoir un paquet "/disconnect".
-        
+                %C'est la combinaison d'un /disconnect avec la fermeture du programme. Par
+                %conséquent, le serveur s'attendra à reçevoir un paquet "/disconnect".
+
         % subsection client (end)
 
         \subsection{Serveur} % (fold)
         \label{sub:serveur}
-            
+
         % subsection serveur (end)
 
         \subsection{Croquis, organigramme ou algorithmes} % (fold)
         \label{sub:croquis-org-algo}
-        
+
         % subsection croquis-org-algo (end)
 
         \subsection{Structures de données} % (fold)
         \label{sub:struct-donnes}
-        
+
         % subsection struct-donnes (end)
     % section method-concept (end)
 
     \section{Analyse et description du programme} % (fold)
     \label{sec:analyse-desc}
-    
+
     % section analyse-desc (end)
 
     \section{Discussions} % (fold)
     \label{sec:discussions}
-    
+
     % section discussions (end)
 
     \section{Conclusion} % (fold)
     \label{sec:Conclusion}
-    
+
     % section Conclusions (end)
 
     % ----------

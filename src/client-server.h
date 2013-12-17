@@ -92,12 +92,17 @@ typedef struct _connection_info {
     char id[32];
 } connection_info;
 
-typedef struct _text_msg {
+typedef struct _cli_text_msg {
+    unsigned int type;
+    char message[MESSAGE_SIZE];
+} cli_text_msg;
+
+typedef struct _srv_text_msg {
     unsigned int type;
     char from[32];
     char priv;
     char message[MESSAGE_SIZE];
-} text_msg;
+} srv_text_msg;
 
 typedef union {
     unsigned int type; /* in {-1,0,1,2}
@@ -107,16 +112,16 @@ typedef union {
                         */
     client_cmd cmd;
     connection_info con_info;
-    text_msg msg;
+    cli_text_msg msg;
 } client_packet;
 
 typedef union {
     unsigned int type;  /* in {-1,0,1}.
                          * -1: fail
-                         *  0: succès quelconque
+                         *  0: succes quelconque
                          *  1: text_msg
                          */
-    text_msg msg;
+    srv_text_msg msg;
 } server_packet;
 
 #endif /* end of include guard: CLIENT_SERVER_NN925AM4 */
