@@ -1,0 +1,258 @@
+\documentclass[12pt,french]{article}
+
+%--------------------
+% Basic packages
+%--------------------
+\usepackage{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+
+% LIENS
+\usepackage{hyperref}
+\hypersetup{hidelinks, colorlinks, citecolor=black, linkcolor=black, urlcolor=blue}
+
+% ENTÊTES
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{INF1010\\Travail Pratique 2}
+% STYLE SECTIONS
+\usepackage{sectsty}
+\sectionfont{\sectionrule{0ex}{0pt}{-1ex}{0.5pt}}
+
+\usepackage{float}
+
+\usepackage{array}
+% CODE LISTING
+\usepackage{listings}
+
+% CAPTIONS
+%\usepackage{caption}
+%\captionsetup[lstlisting]{ format=listing, labelfont=white, textfont=white, singlelinecheck=false, %margin=0pt, font={bf,footnotesize} }
+
+% COULEURS
+\usepackage{color}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{ %
+      backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+      basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+      breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+      breaklines=true,                 % sets automatic line breaking
+      captionpos=b,                    % sets the caption-position to bottom
+      commentstyle=\color{mygreen},    % comment style
+      deletekeywords={...},            % if you want to delete keywords from the given language
+      escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+      extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+      frame=single,                    % adds a frame around the code
+      keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+      keywordstyle=\color{blue},       % keyword style
+      language=Octave,                 % the language of the code
+      morekeywords={*,...},            % if you want to add more keywords to the set
+      numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+      numbersep=5pt,                   % how far the line-numbers are from the code
+      numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+      rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+      showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+      showstringspaces=false,          % underline spaces within strings only
+      showtabs=false,                  % show tabs within strings adding particular underscores
+      stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+      stringstyle=\color{mymauve},     % string literal style
+      tabsize=2,                       % sets default tabsize to 2 spaces
+      title=\title                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+% Règle les problèmes d'encodage de caractères dans les fichiers sources
+\lstset{literate=%
+{á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+{Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+{à}{{\`a}}1 {è}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ò}{{\`u}}1
+{À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ò}{{\`U}}1
+{ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+{Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+{â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+{Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+{œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+{ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+{€}{{\EUR}}1 {£}{{\pounds}}1
+}
+
+
+\begin{document}
+    \begin{titlepage}
+        \begin{center}
+            \noindent\rule{13cm}{1pt}\\[0.4cm]
+             % Titre
+            \textsc{\huge \bfseries Travail Pratique 2}\\
+                                    INF1010\\[0.4cm]
+            \noindent\rule{13cm}{1pt}\\[5cm]
+            
+            % Auteurs
+            \begin{minipage}{0.4\textwidth}
+                \begin{flushleft}
+                \large\emph{Auteur(s):}\\[0.5cm]
+                    Simon \textsc{Désaulniers}\\
+                    Frédéric \textsc{Hamelin}
+                \end{flushleft}
+            \end{minipage}
+            \begin{minipage}{0.5\textwidth}
+                \begin{flushright} \large
+                    \emph{Professeur:} \\[0.5cm]
+                    Boucif \textsc{Amar Bensaber}, Ph.D
+                    \vspace{\parskip}
+                \end{flushright}
+            \end{minipage}
+    
+            % On va au bas de la page
+            \vfill
+            {\large Université du Québec à Trois-Rivières\\ \today}
+        \end{center}
+        \thispagestyle{empty}
+    \end{titlepage}
+    \pagenumbering{roman}
+    \setcounter{page}{1}
+
+    \tableofcontents
+    \newpage
+    
+    \pagenumbering{arabic}
+    \setcounter{page}{1}
+
+    \section{Introduction} % (fold)
+    \label{sec:intro}
+        La pile {\tt TCP/IP} permet une abstraction de la gestion de communication sur un réseau
+        d'ordinateur. Ce travail permettera de démontrer la compréhension chez l'étudiant des outils
+        de développement d'applications communicant sur le réseau.
+
+        \subsection{Objectifs et buts} % (fold)
+        \label{sub:obj-buts}
+            Dans le cadre du cours INF1010, le travail pratique 2 vise à créer une application du type
+            client/serveur permettant la communication entre plusieurs clients en mode {\tt TCP}. La
+            gestion de {\tt sockets} et de connexions multiples doit être faite de façon à ce que
+            plusieurs clients communiquent à l'aide du service offert par le serveur. Plus précisément,
+            plusieurs utilisateurs doivent avoir le pouvoir de :
+            \begin{itemize}
+                \item communiquer au moyen de texte (<< chat >>);
+                \item envoie de requêtes spéciales :
+                    \begin{itemize}
+                        \item connexion et déconnexion;
+                        \item liste des clients connectés;
+                        \item envoie de message à un client, un sous-ensemble de la totalité et la
+                            totalité;
+                    \end{itemize}
+            \end{itemize}
+        % subsection obj_buts (end)
+    % section Introduction (end)
+
+    \section{Méthodologie de conception} % (fold)
+    \label{sec:method-concept}
+
+        % conception client-serveur
+        \subsection{Échange client/serveur} % (fold)
+        \label{sub:echange client/serveur}
+            Afin de communiquer de façon uniforme le client et le serveur ont étés prévu pour
+            échanger des structures encapsulant l'information. Ces structures comprennent entre
+            autres 
+        % subsection echange client/serveur (end)
+
+        \subsection{Client} % (fold)
+        \label{sub:client}
+%- msg::
+    %description: Envoie un message à l'utilisateur spécifié.
+    %synopsis: /msg <nom_utilisateur> <message>
+     %- nom_utilisateur: Le nom d'utilisateur de la personne à qui envoyer le
+                        %message. Si le nom d'utilisateur est "-", envoyer à tous
+                        %les clients connectés.
+     %- message: Le message à envoyer.
+
+%- names::
+    %synopsis: /names
+    %description: Requête de la liste des clients connectés dans le canal.
+
+    %Affichage à l'écran (suggestion):
+
+    %Clients dans votre canal:
+    %-------------------------
+    %[simon] [fred] [patate_poel] ...
+    %[mathieu] [simon2] [balbal] ...
+    %...
+
+%- list::
+    %description: Requête de la liste de canaux disponibles.
+    %synopsis: /list
+
+    %Affichage à l'écran (suggestion):
+
+    %Canaux ouverts sur le serveur:
+    %------------------------------
+    %[<nom_canal>]: <topic>
+    %[<nom_canal>]: <topic>
+    %[<nom_canal>]: <topic>
+    %...
+
+%- topic::
+    %description: Requête du topic du canal.
+    %synopsis: /topic
+
+%- connect::
+    %description: Connecte le client au serveur spécifié.
+    %synopsis: /connect <nome_hôte>
+     %- nome_hôte: Le nom d'ĥôte du serveur auquel se connecter.
+
+%- join::
+    %description: Change le canal dans lequel le client clavarde.
+    %synopsis: /join <nom_canal>
+     %- nom_canal: Le nom du canal auquel se joindre.
+
+%- disconnect::
+    %description: Déconnecte le client du serveur.
+    %synopsis: /disconnect
+
+%- quit::
+    %description: Ferme le programme.
+    %synopsis: /quit
+
+    %C'est la combinaison d'un /disconnect avec la fermeture du programme. Par
+    %conséquent, le serveur s'attendra à reçevoir un paquet "/disconnect".
+        
+        % subsection client (end)
+
+        \subsection{Serveur} % (fold)
+        \label{sub:serveur}
+            
+        % subsection serveur (end)
+
+        \subsection{Croquis, organigramme ou algorithmes} % (fold)
+        \label{sub:croquis-org-algo}
+        
+        % subsection croquis-org-algo (end)
+
+        \subsection{Structures de données} % (fold)
+        \label{sub:struct-donnes}
+        
+        % subsection struct-donnes (end)
+    % section method-concept (end)
+
+    \section{Analyse et description du programme} % (fold)
+    \label{sec:analyse-desc}
+    
+    % section analyse-desc (end)
+
+    \section{Discussions} % (fold)
+    \label{sec:discussions}
+    
+    % section discussions (end)
+
+    \section{Conclusion} % (fold)
+    \label{sec:Conclusion}
+    
+    % section Conclusions (end)
+
+    % ----------
+    % En annexe:
+    % ----------
+    %
+    % Code source
+    % manuels
+\end{document}
