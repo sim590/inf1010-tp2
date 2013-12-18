@@ -83,50 +83,52 @@ void inputCommand()
     wrefresh(inputWin);
     wgetstr(inputWin, str);
 
-
-    if (*str != '/') {
-       sendMsgToServer(str);
-    }
-    else {
-    
-        char * command;
-        getWord(str,&command,1,0);
-
-        if (!strcmp(command, "connect")) {
-            connectToServer(str);
-        }
-        else if (!strcmp(command, "quit")) {
-            return;
-        }
-        else if (!strcmp(command, "msg")) {
-            char msg[MESSAGE_SIZE];
-            char *dest;
-            getWord(str, &dest, 2, 0);
-            if (!strcmp(dest, "-"))
-                strcpy(msg,"(tous)[");
-            else
-                sprintf(msg,"(à %s)[", dest);
-            strcat(msg,my_id);
-            strcat(msg,"]:");
-            char* mainMsg;
-            getWord(str,&mainMsg,3,1);
-            strcat(msg,mainMsg);
-            free(mainMsg);
-
-            wattron(displayWin, COLOR_PAIR(3));
-            addText(msg);
-            wattron(displayWin, COLOR_PAIR(1));
-
-            sendCmdToServer(str,2);
-        }
-        else if (!strcmp(command, "join")) {
-            sendCmdToServer(str,2);
+    if (*str != '\0') {
+        if (*str != '/') {
+            sendMsgToServer(str);
         }
         else {
-            sendCmdToServer(str,1); 
-        }
+    
+            char * command;
+            getWord(str,&command,1,0);
 
-        free(command);
+            if (!strcmp(command, "connect")) {
+                connectToServer(str);
+            }
+            else if (!strcmp(command, "quit")) {
+                return;
+            }
+            else if (!strcmp(command, "msg")) {
+                char msg[MESSAGE_SIZE];
+                char *dest;
+                getWord(str, &dest, 2, 0);
+                if (!strcmp(dest, "-"))
+                    strcpy(msg,"(tous)[");
+                else
+                    sprintf(msg,"(à %s)[", dest);
+                strcat(msg,my_id);
+                strcat(msg,"]:");
+                char* mainMsg;
+                getWord(str,&mainMsg,3,1);
+                strcat(msg,mainMsg);
+                free(mainMsg);
+
+                wattron(displayWin, COLOR_PAIR(3));
+                addText(msg);
+                wattron(displayWin, COLOR_PAIR(1));
+
+                sendCmdToServer(str,2);
+            }
+            else if (!strcmp(command, "join")) {
+                sendCmdToServer(str,2);
+            }
+            else {
+                sendCmdToServer(str,1); 
+            }
+    
+
+            free(command);
+        }
     }
 
     free(str);
