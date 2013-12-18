@@ -147,7 +147,7 @@
 
     \section{Méthodologie de conception} % (fold)
     \label{sec:method-concept}
-        Le système pour lequel l'équipe opté suit le modèle standard {\tt IRC} avec canaux. Par
+        Le système pour lequel l'équipe a opté suit le modèle standard {\tt IRC} avec canaux. Par
         conséquent, les clients se connectant au serveur ne communiquent pas nécessairement tous
         ensemble. Afin de communiquer directement, il est nécessaire pour chaque client de se
         trouver le même canal. Cependant, les clients sont munis de commandes spéciales leur
@@ -155,6 +155,10 @@
 
 
         % conception client-serveur
+    % section method-concept (end)
+
+    \section{Analyse et description du programme} % (fold)
+    \label{sec:analyse-desc}
         \subsection{Échange client/serveur} % (fold)
         \label{sub:echange-client-serveur}
             Afin de communiquer de façon uniforme le client et le serveur ont étés prévu pour
@@ -354,7 +358,8 @@
 
                 %C'est la combinaison d'un /disconnect avec la fermeture du programme. Par
                 %conséquent, le serveur s'attendra à reçevoir un paquet "/disconnect".
-
+            Le logiciel client est conçu avec une interface texte utilisant la librairie {\tt
+            ncurses}. 
         % subsection client (end)
 
         \subsection{Serveur} % (fold)
@@ -371,10 +376,6 @@
         \label{sub:struct-donnes}
 
         % subsection struct-donnes (end)
-    % section method-concept (end)
-
-    \section{Analyse et description du programme} % (fold)
-    \label{sec:analyse-desc}
 
     % section analyse-desc (end)
 
